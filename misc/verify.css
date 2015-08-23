@@ -1,0 +1,99 @@
+body, html, h2, form, ul, li {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 14px;
+  list-style-type: none;
+}
+
+body {
+  background: #f5f5f0;
+  font: normal normal 300 20px/38px Raleway;
+}
+
+.msg {
+  width: 90%;
+  max-width: 1000px;
+  line-height: 22px;
+  background: #FFFFFF;
+  border: 1px solid #E5E5E5;
+  font-size: 15px;
+  text-align: center;
+  margin: 10px auto;
+  padding: 10px 5px;
+  box-shadow: rgba(0, 0, 0, 0.102) 0px 1px 2px 0px;
+  -webkit-box-shadow: rgba(0, 0, 0, 0.102) 0px 1px 2px 0px;
+  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+}
+
+.msg h2 {
+  font-size: 22px;
+  color: #006600;
+  margin-bottom: 15px;
+}
+
+.msg a {
+  color: #3366FF;
+  text-decoration: none;
+}
+
+.msg a:hover {
+  text-decoration: underline;
+}
+
+input {
+  background-color: #FFFFFF;
+  border: 1px solid #CCCCCC;
+  display: block;
+  padding: 5px;
+  width: 60%;
+  margin: 0 auto 5px auto;
+  border-radius: 5px;
+  -webkit-border-radius: 5px;
+}
+
+button {
+  cursor: pointer;
+  color: #FFF;
+  background: #499BDC;
+  border: 0;
+  padding: 8px 20px;
+  border-radius: 5px;
+  -webkit-border-radius: 5px;
+}
+
+button:hover {
+  background: #428cc7;
+}
+
+.success {
+  font-size: 14px;
+  background: #2b9464;
+}
+
+.error {
+  font-size: 14px;
+  background: #bb0f00;
+}
+
+.success, .error {
+  font-weight: 800;
+  color: #FFF;
+  padding: 4px 8px;
+  margin-bottom: 15px;
+  border-radius: 5px;
+  -webkit-border-radius: 5px;
+}
+
+@media (max-width: 850px){
+
+.msg {
+  width: 98%;
+}
+
+input {
+  width: 90%
+}
+
+}

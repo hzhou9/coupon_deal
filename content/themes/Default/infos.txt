@@ -1,0 +1,3 @@
+Version: 1.0
+Published by: CouponsCMS http://couponscms.com
+Description: Default theme for CouponsCMS v1.00

@@ -3,6 +3,22 @@
 namespace plugin\CJApi\inc;
 
 class actions {
+    
+    public static function find_cj_img( $advertiserId ) {
+        global $db;
+        $ret = '';
+        $stmt = $db->stmt_init();
+        $stmt->prepare( "SELECT logoId FROM cj_img where advertiserId = ".$advertiserId );
+        $stmt->execute();
+        $stmt->bind_result( $id );
+        if($stmt->fetch()){
+            $ret = "https://members.cj.com/member/publisher/logo/".$id.".gif";
+        }
+        $stmt->close();
+        
+        return $ret;
+        
+    }
 
 /* ASSIGN ID */
 
@@ -45,7 +61,10 @@ global $db;
   $stmt = $db->stmt_init();
   $stmt->prepare( "INSERT INTO " . DB_TABLE_PREFIX . "stores (cjID, user, category, popular, name, link, description, tags, image, visible, meta_title, meta_desc, lastupdate_by, lastupdate, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())" );
 
-  $logo = isset( $_FILES['logo'] ) ? \site\images::upload( $_FILES['logo'], 'logo_', array( 'path' => DIR . '/', 'max_size' => 1024, 'max_width' => 600, 'max_height' => 400 ) ) : '';
+  $logo = isset( $_FILES['logo'] ) ? \site\images::upload( $_FILES['logo'], 'logo_', array( 'path' => DIR . '/', 'max_size' => 1024, 'max_width' => 600, 'max_height' => 400 ) ) : $opt['logo'];
+    if($logo == ''){
+        $logo = $opt['logo'];
+    }
 
   $stmt->bind_param( "iiiisssssissi", $opt['cjID'], $opt['user'], $opt['category'], $opt['popular'], $opt['name'], $opt['url'], $opt['description'], $opt['tags'], $logo, $opt['publish'], $opt['meta_title'], $opt['meta_desc'], $GLOBALS['me']->ID );
   $execute = $stmt->execute();

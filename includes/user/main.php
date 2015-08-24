@@ -568,6 +568,89 @@ if( !( $allow = (int) \query\main::get_option( 'allow_reviews' ) ) || !isset( $p
 }
 
 }
+    
+    /*
+     
+     ADD PRODUCT TO FAVORITES
+     
+     */
+    
+    public static function favorite_product( $id, $product, $type = 'add' ) {
+        
+        global $db;
+        
+        if( $type == 'add' ) {
+            
+            if( !\user\main::check_favorite_product( $id, $product['id'] ) ) {
+                
+                $stmt = $db->stmt_init();
+                $stmt->prepare( "INSERT INTO " . DB_TABLE_PREFIX . "favorite_product (user, product, start, expiration, date) VALUES (?, ?, ?, ?, NOW())" );
+                $stmt->bind_param( "iiss", $id, $product['id'], $product['start'], $product['expiration'] );
+                $execute = $stmt->execute();
+                $stmt->close();
+                
+                if( $execute ) {
+                    
+                    return true;
+                    
+                } else {
+                    
+                    return false;
+                    
+                }
+                
+            }
+            
+        } else if( $type == 'remove' ) {
+            
+            $stmt = $db->stmt_init();
+            $stmt->prepare( "DELETE FROM " . DB_TABLE_PREFIX . "favorite_product WHERE user = ? AND product = ?" );
+            $stmt->bind_param( "ii", $id, $product['id'] );
+            $execute = $stmt->execute();
+            $stmt->close();
+            
+            if( $execute ) {
+                
+                return true;
+                
+            } else {
+                
+                return false;
+                
+            }
+            
+        }
+        
+        return false;
+        
+    }
+    
+    /*
+     
+     CHECK IF A PRODUCT IT'S FAVORITE
+     
+     */
+    
+    public static function check_favorite_product( $id, $productid ) {
+        
+        global $db;
+        
+        $stmt = $db->stmt_init();
+        $stmt->prepare( "SELECT COUNT(*) FROM " . DB_TABLE_PREFIX . "favorite_product WHERE user = ? and product = ?" );
+        $stmt->bind_param( "ii", $id, $productid );
+        $stmt->bind_result( $count );
+        $stmt->execute();
+        $stmt->fetch();
+        $stmt->close();
+        
+        if( $count > 0 ) {
+            return true;
+        } else {
+            return false;
+        }
+        
+    }
+    
 
 /*
 

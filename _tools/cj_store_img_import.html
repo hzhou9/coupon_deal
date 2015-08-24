@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>CJ Helper Tools</title>
+    </head>
+    <body>
+        <b>Instructions</b><br>
+        1. Run chrome as --disable-web-security<br>
+        2. <a href="https://members.cj.com/" target="_blank">Login CJ</a><br>
+        3. Open this page and <button id="runit">Run</button> with publisherId <input id="publisherId" type="text" value="4593061">
+            <div id="retmsg"></div>
+    </body>
+    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script>
+        var url = 'https://members.cj.com/member/publisher/4593061/advertiserSearch.json?publisherId=4593061&pageSize=100&geographicSource=&relationshipStatus=active&sortColumn=advertiserName&sortDescending=false&pageNumber=';
+        var url2submit = "../_tools.php";
+        window.arrs = [];
+        function collectDatas(urlme, page){
+            $.ajax({
+                   url:urlme+page,
+                   type:'GET',
+                   success:function(result){
+                   var resultobj = result;
+                   var totalResults = resultobj.totalResults;
+                   var advts = resultobj.advertisers;
+                   if(advts.length > 0){
+                   
+                   for(i=0;i<advts.length;i++){
+                   window.arrs.push([advts[i].advertiserId,advts[i].logoId]);
+                   }
+                   if(totalResults > page*100){
+                   /*keep collect*/
+                   collectDatas(urlme, page+1);
+                   }else{
+                   submitDatas();
+                   }
+                   
+                   }else{
+                   submitDatas();
+                   }
+                   
+                   },
+                   error:function(msg){
+                   console.log(msg);
+                   
+                   submitDatas();
+                   alert('Error! Please check console log.');
+                   }
+                   });
+        }
+    function submitDatas(){
+        if(window.arrs && window.arrs.length > 0){
+            var d2submit = {data:JSON.stringify(window.arrs),action:'set_cjimg'};
+            $.ajax({
+                   url:url2submit,
+                   type:'POST',
+                   data: d2submit,
+                   success:function(result){
+                   
+                   $('#retmsg').html(result);
+                   
+                   },
+                   error:function(msg){
+                   console.log(msg);
+                   alert('Error! Please check console log.');
+                   }
+                   });
+        }else{
+            alert('Error! NO Data.');
+        }
+    }
+        $(document).ready(function () {
+            $('#runit').click(function () {
+                            var publisherId = $('#publisherId').val();
+                            var urlme = url.replace("4593061", publisherId);
+                            var page = 1;
+                            window.arrs = [];
+                              $('#retmsg').html('Working! Do NO close...');
+                            collectDatas(urlme, page);
+            });
+        });
+    </script>
+</html>

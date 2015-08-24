@@ -62,14 +62,14 @@
   $store = $infos->storeID;
   $product = $infos->ID;
   $url = $infos->url;
-  $type = 'Coupon';
+  $type = 'Product';
   $typeID = (int) $_GET['product'];
 
   }
 
   // prepare URL for traking
-
-  $url = str_ireplace( array( '{TYPE}', '{UID}', '{ID}' ), array( $type, ( $GLOBALS['me'] ? $GLOBALS['me']->ID : 'UNL' ), $typeID ), $url );
+    $ID_replace = $GLOBALS['me'] ? $GLOBALS['me']->ID : 'UNL';
+  $url = str_ireplace( array( '{TYPE}', '{UID}', '{ID}', '_mystore365_track_id_' ), array( $type, $ID_replace, $typeID, $type.'_'.$ID_replace.'_'.$typeID ), $url );
 
   $stmt = $db->stmt_init();
 

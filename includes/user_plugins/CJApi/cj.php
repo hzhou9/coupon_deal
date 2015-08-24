@@ -102,16 +102,19 @@ if( isset( $_GET['store'] ) ) {
 if( isset( $id ) && \plugin\CJApi\inc\import::store_imported( $id ) ) {
   echo '<div class="a-error">Sorry, this store is already imported.</div>';
 } else {
-
+    
+    $imgdisp = \plugin\CJApi\inc\actions::find_cj_img($id);
+    
 if( $_SERVER['REQUEST_METHOD'] == 'POST' && isset( $_POST['store'] ) ) {
 
 $store = array_map( 'htmlspecialchars', $_POST['store'] );
 
 if( isset( $_POST['csrf'] ) && check_csrf( $_POST['csrf'], 'cjapi_csrf' ) ) {
 
-  if( \plugin\CJApi\inc\actions::add_store( array( 'cjID' => $id, 'user' => $GLOBALS['me']->ID, 'popular' => ( isset( $_POST['store']['Popular'] ) ? true : false ), 'category' => $_POST['store']['Category'], 'name' => $_POST['store']['Name'], 'url' => $_POST['store']['Link'], 'description' => $_POST['store']['Description'], 'tags' => $_POST['store']['Tags'], 'publish' => ( isset( $_POST['store']['Publish'] ) ? true : false ), 'meta_title' => $_POST['store']['MTitle'], 'meta_desc' => $_POST['store']['MDesc'] ) ) )
-  echo '<div class="a-success">Added!</div>';
-  else
+    if( \plugin\CJApi\inc\actions::add_store( array( 'cjID' => $id, 'logo'=>$imgdisp, 'user' => $GLOBALS['me']->ID, 'popular' => ( isset( $_POST['store']['Popular'] ) ? true : false ), 'category' => $_POST['store']['Category'], 'name' => $_POST['store']['Name'], 'url' => $_POST['store']['Link'], 'description' => $_POST['store']['Description'], 'tags' => $_POST['store']['Tags'], 'publish' => ( isset( $_POST['store']['Publish'] ) ? true : false ), 'meta_title' => $_POST['store']['MTitle'], 'meta_desc' => $_POST['store']['MDesc'] ) ) ){
+  echo '<div class="a-success">Added!</div><button class="btn" onclick="window.history.go(-2);">Back</button>';
+        return;
+    }else
   echo '<div class="a-error">Error!</div>';
 
 }
@@ -139,12 +142,15 @@ foreach( \query\main::group_categories( array( 'max' => 0 ) ) as $cat ) {
   echo '</optgroup>';
 }
 echo '</select></div></div>';
-
+    
 echo '<div class="row"><span>Name:</span><div><input type="text" name="store[Name]" value="' . ( isset( $store['Name'] ) ? $store['Name'] : '' ) . '" required /></div></div>
 <div class="row"><span>Store URL:</span><div><input type="text" name="store[Link]" value="' . ( isset( $store['Link'] ) ? $store['Link'] : '' ) . '" /></div></div>
 <div class="row"><span>Description:</span><div><textarea name="store[Description]">' . ( isset( $store['Description'] ) ? $store['Description'] : '' ) . '</textarea></div></div>
 <div class="row"><span>Tags:</span><div><input type="text" name="store[Tags]" value="' . ( isset( $store['Tags'] ) ? $store['Tags'] : '' ) . '" /></div></div>
-<div class="row"><span>Logo:</span><div><input type="file" name="logo" value="" /></div></div>
+<div class="row"><span>Logo:</span><div><input type="file" name="logo" value="" />
+    <img src="'.$imgdisp.'" style="width:80px;"/>
+    
+    </div></div>
 <div class="row"><span>Add to:</span><div><input type="checkbox" name="store[Popular]" id="popular"' . ( isset( $store['Popular'] ) ? ' checked' : '' ) . ' /> <label for="popular">Populars</label></div></div>
 <div class="row"><span>Publish:</span><div><input type="checkbox" name="store[Publish]" id="publish"' . ( $_SERVER['REQUEST_METHOD'] == 'POST' && !isset( $store['Publish'] ) ? '' : ' checked' ) . ' /> <label for="publish">Publish this store</label></div></div>
 
@@ -197,13 +203,15 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' && isset( $_POST['token'] ) && check_cs
   $id = key( $store );
   $store = current( $store );
 
-  if( isset( $_POST['id'][$id] ) )
-  if( ! \plugin\CJApi\inc\import::store_imported( $id ) && \plugin\CJApi\inc\actions::add_store( array( 'cjID' => $id, 'user' => $GLOBALS['me']->ID, 'popular' => 0, 'category' => $_POST['category'], 'name' => $store['Name'], 'url' => $store['Link'], 'description' => '', 'tags' => '', 'publish' => 1, 'meta_title' => '', 'meta_desc' => '' ) ) ) {
+      if( isset( $_POST['id'][$id] ) ){
+          $imgdisp = \plugin\CJApi\inc\actions::find_cj_img($id);
+  if( ! \plugin\CJApi\inc\import::store_imported( $id ) && \plugin\CJApi\inc\actions::add_store( array( 'cjID' => $id, 'logo'=>$imgdisp, 'user' => $GLOBALS['me']->ID, 'popular' => 0, 'category' => $_POST['category'], 'name' => $store['Name'], 'url' => $store['Link'], 'description' => '', 'tags' => '', 'publish' => 1, 'meta_title' => '', 'meta_desc' => '' ) ) ) {
     $success++;
   } else {
     $error++;
 
   }
+      }
 
   }
 
@@ -270,9 +278,9 @@ $coupon = \site\utils::array_map_recursive( 'htmlspecialchars', $_POST['coupon']
 
 if( isset( $_POST['csrf'] ) && check_csrf( $_POST['csrf'], 'cjapi_csrf' ) ) {
 
-  if( \plugin\CJApi\inc\actions::add_item( array( 'cjID' => $id, 'store' => $store->ID, 'category' => $_POST['coupon']['Category'], 'popular' => ( isset( $_POST['coupon']['Popular'] ) ? true : false ), 'exclusive' => ( isset( $_POST['coupon']['Exclusive'] ) ? true : false ), 'name' => $_POST['coupon']['Title'], 'link' => ( !isset( $_POST['coupon']['Ownlink'] ) && isset( $_POST['coupon']['Link'] ) && filter_var( $_POST['coupon']['Link'], FILTER_VALIDATE_URL ) ? $_POST['coupon']['Link'] : '' ), 'code' => $_POST['coupon']['Code'], 'description' => $_POST['coupon']['Description'], 'tags' => $_POST['coupon']['Tags'], 'start' => implode( $_POST['coupon']['SD'], ', ' ), 'end' => implode( $_POST['coupon']['ED'], ', ' ), 'publish' => ( isset( $_POST['coupon']['Publish'] ) ? true : false ), 'meta_title' => $_POST['coupon']['MTitle'], 'meta_desc' => $_POST['coupon']['MDesc'] ) ) )
-  echo '<div class="a-success">Added!</div>';
-  else
+    if( \plugin\CJApi\inc\actions::add_item( array( 'cjID' => $id, 'store' => $store->ID, 'category' => $_POST['coupon']['Category'], 'popular' => ( isset( $_POST['coupon']['Popular'] ) ? true : false ), 'exclusive' => ( isset( $_POST['coupon']['Exclusive'] ) ? true : false ), 'name' => $_POST['coupon']['Title'], 'link' => ( !isset( $_POST['coupon']['Ownlink'] ) && isset( $_POST['coupon']['Link'] ) && filter_var( $_POST['coupon']['Link'], FILTER_VALIDATE_URL ) ? $_POST['coupon']['Link'] : '' ), 'code' => $_POST['coupon']['Code'], 'description' => $_POST['coupon']['Description'], 'tags' => $_POST['coupon']['Tags'], 'start' => implode( $_POST['coupon']['SD'], ', ' ), 'end' => implode( $_POST['coupon']['ED'], ', ' ), 'publish' => ( isset( $_POST['coupon']['Publish'] ) ? true : false ), 'meta_title' => $_POST['coupon']['MTitle'], 'meta_desc' => $_POST['coupon']['MDesc'] ) ) ){
+        echo '<div class="a-success">Added!</div><button class="btn" onclick="window.history.go(-2);">Back</button>';return;
+    }else
   echo '<div class="a-error">Error!</div>';
 
 }
@@ -495,7 +503,7 @@ $pages = ceil( $attributes['total-matched'] / $per_page );
 if( $page > $pages ) $page = $pages;
 /* */
 
-echo '<div class="results">' . $attributes['total-matched'] . ' results';
+echo '<div class="results"><a href="'.$GLOBALS['siteURL'].'_tools/cj_store_img_import.html" target="_blank">[Bind CJ Store Images]</a> ' . $attributes['total-matched'] . ' results';
 if( !empty( $_GET['type'] ) || !empty( $_GET['category'] ) || !empty( $_GET['ids'] ) || !empty( $_GET['search'] ) ) echo ' / <a href="?plugin=CJApi/cj.php&amp;action=links' . (isset( $_GET['view'] ) ? '&amp;view=' . htmlspecialchars( $_GET['view'] ) : '') . '">Reset view</a>';
 echo '</div>';
 
@@ -726,7 +734,7 @@ $pages = ceil( $attributes['total-matched'] / $per_page );
 if( $page > $pages ) $page = $pages;
 /* */
 
-echo '<div class="results">' . $attributes['total-matched'] . ' results';
+echo '<div class="results"><a href="'.$GLOBALS['siteURL'].'_tools/cj_store_img_import.html" target="_blank">[Bind CJ Store Images]</a> ' . $attributes['total-matched'] . ' results';
 if( !empty( $_GET['search'] ) ) echo ' / <a href="?plugin=CJApi/cj.php&amp;action=lists' . (!isset( $_GET['view'] ) ? '' : '&amp;view=' . htmlspecialchars( $_GET['view'] )) . '">Reset view</a>';
 echo '</div>';
 
@@ -768,13 +776,22 @@ foreach( $advs as $item ) {
 
   // check first if this store is imported on your website
   $imported = \plugin\CJApi\inc\import::store_imported( $item['advertiser-id'] );
+    $imgdisp = NULL;
+    if($imported){
+        $imgdisp = \query\main::store_avatar( $imported->image );
+    }else{
+        $imgdisp = \plugin\CJApi\inc\actions::find_cj_img($item['advertiser-id']);
+        if($imgdisp == ''){
+            $imgdisp = \query\main::store_avatar( '' );
+        }
+    }
 
   echo '<li>
   <input type="checkbox" name="id[' . $item['advertiser-id'] . ']"' . ( $imported ? ' disabled' : '' ) . ' />
 
   <div style="display: table;">
 
-  <img src="' . \query\main::store_avatar( ( $imported ? $imported->image : '' ) ) . '" alt="" style="width: 80px;" />
+  <img src="' . $imgdisp . '" alt="" style="width: 80px;" />
   <div class="info-div"><h2>' . ( $item['relationship-status'] !== 'joined' ? '<span class="msg-error">Not Joined</span> ' : '<span class="msg-success">Joined</span> ' ) . ( $imported ? '<span class="msg-alert" title="Local name: ' . $imported->name . '">Imported</span> ' : '' ) . htmlspecialchars( $item['advertiser-name'] ) . '</h2>
 
   URL: <a href="' . $item['program-url'] . '" target="_blank">' . ( ( $url = urldecode( $item['program-url'] ) ) && strlen( $url ) > 50 ? substr( $url, 0, 50 ) . '...' : $url ) . '</a> <br />

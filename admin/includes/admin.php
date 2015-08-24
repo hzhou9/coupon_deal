@@ -830,14 +830,18 @@ if( !ab_to( array( 'products' => 'delete' ) ) ) return false;
   $id = (array) $id;
 
   $stmt = $db->stmt_init();
-  $stmt->prepare( "DELETE FROM " . DB_TABLE_PREFIX . "products WHERE id = ?" );
 
   foreach( $id as $ID ) {
 
   $product = \query\main::product_infos( $ID );
-
-  $stmt->bind_param( "i", $ID );
-  $stmt->execute();
+      
+      $stmt->prepare( "DELETE FROM " . DB_TABLE_PREFIX . "products WHERE id = ?" );
+      $stmt->bind_param( "i", $ID );
+      $stmt->execute();
+      // remove this product from favorites
+      $stmt->prepare( "DELETE FROM " . DB_TABLE_PREFIX . "favorite_product WHERE product = ?" );
+      $stmt->bind_param( "i", $ID );
+      $stmt->execute();
 
   if( !empty( $product->image ) ) {
     @unlink( DIR . '/' . $product->image );
@@ -1216,6 +1220,10 @@ if( !ab_to( array( 'users' => 'delete' ) ) ) return false;
 
   // clear his favorites
   $stmt->prepare( "DELETE FROM " . DB_TABLE_PREFIX . "favorite WHERE user = ?" );
+  $stmt->bind_param( "i", $ID );
+  $stmt->execute();
+  
+  $stmt->prepare( "DELETE FROM " . DB_TABLE_PREFIX . "favorite_product WHERE user = ?" );
   $stmt->bind_param( "i", $ID );
   $stmt->execute();
 

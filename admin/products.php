@@ -171,7 +171,7 @@ echo '</div>';
 if( $_SERVER['REQUEST_METHOD'] == 'POST' && isset( $_POST['csrf'] ) && check_csrf( $_POST['csrf'], 'products_csrf' ) ) {
 
   if( isset( $_POST['store'] ) && isset( $_POST['category'] ) && isset( $_POST['name'] ) && isset( $_POST['price'] ) && isset( $_POST['old_price'] ) && isset( $_POST['currency'] ) && isset( $_POST['description'] ) && isset( $_POST['tags'] ) && isset( $_POST['reward_points'] ) && isset( $_POST['start'] ) && isset( $_POST['end'] ) && isset( $_POST['meta_title'] ) && isset( $_POST['meta_desc'] ) )
-  if( actions::add_product( array( 'store' => $_POST['store'], 'category' => $_POST['category'], 'popular' => ( isset( $_POST['popular'] ) ? 1 : 0 ), 'name' => $_POST['name'], 'price' => $_POST['price'], 'old_price' => $_POST['old_price'], 'currency' => strtoupper( $_POST['currency'] ), 'link' => ( !isset( $_POST['product_ownlink'] ) && isset( $_POST['link'] ) && filter_var( $_POST['link'], FILTER_VALIDATE_URL ) ? $_POST['link'] : '' ), 'description' => $_POST['description'], 'tags' => $_POST['tags'], 'cashback' => $_POST['reward_points'], 'start' => $_POST['start']['date'] . ', ' . $_POST['start']['hour'], 'end' => $_POST['end']['date'] . ', ' . $_POST['end']['hour'], 'publish' => ( isset( $_POST['publish'] ) ? 1 : 0 ), 'meta_title' => $_POST['meta_title'], 'meta_desc' => $_POST['meta_desc'] ) ) ) echo '<div class="a-success">' . $LANG['msg_added'] . '</div>';
+  if( actions::add_product( array( 'image_url' => $_POST['image_url'], 'store' => $_POST['store'], 'category' => $_POST['category'], 'popular' => ( isset( $_POST['popular'] ) ? 1 : 0 ), 'name' => $_POST['name'], 'price' => $_POST['price'], 'old_price' => $_POST['old_price'], 'currency' => strtoupper( $_POST['currency'] ), 'link' => ( !isset( $_POST['product_ownlink'] ) && isset( $_POST['link'] ) && filter_var( $_POST['link'], FILTER_VALIDATE_URL ) ? $_POST['link'] : '' ), 'description' => $_POST['description'], 'tags' => $_POST['tags'], 'cashback' => $_POST['reward_points'], 'start' => $_POST['start']['date'] . ', ' . $_POST['start']['hour'], 'end' => $_POST['end']['date'] . ', ' . $_POST['end']['hour'], 'publish' => ( isset( $_POST['publish'] ) ? 1 : 0 ), 'meta_title' => $_POST['meta_title'], 'meta_desc' => $_POST['meta_desc'] ) ) ) echo '<div class="a-success">' . $LANG['msg_added'] . '</div>';
   else
   echo '<div class="a-error">' . $LANG['msg_error'] . '</div>';
 
@@ -210,7 +210,7 @@ echo '</select></div></div>
 <div class="row"><span>' . $LANG['form_description'] . ':</span><div><textarea name="description"></textarea></div></div>
 <div class="row"><span>' . $LANG['form_tags'] . ':</span><div><input type="text" name="tags" value="" /></div></div>
 <div class="row" style="display: none;"><span>' . $LANG['form_reward_points'] . ' <span class="info"><span>' . $LANG['products_form_ireward_points'] . '</span></span>:</span><div><input type="numer" name="reward_points" value="0" /></div></div>
-<div class="row"><span>' . $LANG['form_image'] . ':</span><div><input type="file" name="image" /></div></div>
+<div class="row"><span>' . $LANG['form_image'] . ':</span><div><input type="file" name="image" /><input type="text" name="image_url" /></div></div>
 <div class="row"><span>' . $LANG['form_start_date'] . ':</span><div><input type="date" name="start[date]" value="" style="width: 80%" /><input type="time" name="start[hour]" value="00:00" style="width: 20%" /></div></div>
 <div class="row"><span>' . $LANG['form_end_date'] . ':</span><div><input type="date" name="end[date]" value="" style="width: 80%" /><input type="time" name="end[hour]" value="00:00" style="width: 20%" /></div></div>
 <div class="row"><span>' . $LANG['form_addto'] . ':</span><div><input type="checkbox" name="popular" id="popular" /> <label for="popular">' . $LANG['products_addpopular'] . '</label></div></div>
@@ -286,7 +286,7 @@ if( $item_exists ) {
 if( $_SERVER['REQUEST_METHOD'] == 'POST' && isset( $_POST['csrf'] ) && check_csrf( $_POST['csrf'], 'products_csrf' )) {
 
   if( isset( $_POST['store'] ) && isset( $_POST['category'] ) && isset( $_POST['name'] ) && isset( $_POST['price'] ) && isset( $_POST['old_price'] ) && isset( $_POST['currency'] ) && isset( $_POST['description'] ) && isset( $_POST['tags'] ) && isset( $_POST['reward_points'] ) && isset( $_POST['start'] ) && isset( $_POST['end'] ) && isset( $_POST['meta_title'] ) && isset( $_POST['meta_desc'] ) )
-  if( actions::edit_product( $_GET['id'], array( 'store' => $_POST['store'], 'category' => $_POST['category'], 'popular' => ( isset( $_POST['popular'] ) ? 1 : 0 ), 'name' => $_POST['name'], 'price' => $_POST['price'], 'old_price' => $_POST['old_price'], 'currency' => strtoupper( $_POST['currency'] ), 'link' => ( !isset( $_POST['product_ownlink'] ) && isset( $_POST['link'] ) && filter_var( $_POST['link'], FILTER_VALIDATE_URL ) ? $_POST['link'] : '' ), 'description' => $_POST['description'], 'tags' => $_POST['tags'], 'cashback' => $_POST['reward_points'], 'start' => $_POST['start']['date'] . ', ' . $_POST['start']['hour'], 'end' => $_POST['end']['date'] . ', ' . $_POST['end']['hour'], 'publish' => ( isset( $_POST['publish'] ) ? 1 : 0 ), 'meta_title' => $_POST['meta_title'], 'meta_desc' => $_POST['meta_desc'] ) ) ) {
+  if( actions::edit_product( $_GET['id'], array( 'store' => $_POST['store'], 'image_url' => $_POST['image_url'], 'category' => $_POST['category'], 'popular' => ( isset( $_POST['popular'] ) ? 1 : 0 ), 'name' => $_POST['name'], 'price' => $_POST['price'], 'old_price' => $_POST['old_price'], 'currency' => strtoupper( $_POST['currency'] ), 'link' => ( !isset( $_POST['product_ownlink'] ) && isset( $_POST['link'] ) && filter_var( $_POST['link'], FILTER_VALIDATE_URL ) ? $_POST['link'] : '' ), 'description' => $_POST['description'], 'tags' => $_POST['tags'], 'cashback' => $_POST['reward_points'], 'start' => $_POST['start']['date'] . ', ' . $_POST['start']['hour'], 'end' => $_POST['end']['date'] . ', ' . $_POST['end']['hour'], 'publish' => ( isset( $_POST['publish'] ) ? 1 : 0 ), 'meta_title' => $_POST['meta_title'], 'meta_desc' => $_POST['meta_desc'] ) ) ) {
 
   $info = \query\main::product_infos( $_GET['id'] );
 
@@ -353,7 +353,7 @@ if( !empty( $info->image ) ) echo '<a href="' . \site\utils::update_uri( '', arr
 echo '</div>
 </div>
 
-<input type="file" name="image" />
+<input type="file" name="image" /><input type="text" name="image_url" value="'.$info->image.'"/>
 </div> </div>
 
 <div class="row"' . ( $info->cashback !== 0 ?: 'style="display: none;"' ) . '><span>' . $LANG['form_reward_points'] . ' <span class="info"><span>' . $LANG['products_form_ireward_points'] . '</span></span>:</span><div><input type="numer" name="reward_points" value="' . $info->cashback . '" /></div></div>

@@ -654,6 +654,11 @@ global $db;
 
   $feedID = isset( $opt['feedID'] ) ? $opt['feedID'] : 0;
   $image = \site\images::upload( @$_FILES['image'], 'product_', array( 'path' => DIR . '/', 'max_size' => 1024, 'max_width' => 1000, 'max_height' => 1000, 'current' => '' ) );
+    if(!$image || $image == ''){
+        if(isset( $opt['image_url'] ) && $opt['image_url'] != ''){
+            $image = $opt['image_url'];
+        }
+    }
   $opt['price'] = \site\utils::make_money_format( $opt['price'] );
   $opt['old_price'] = \site\utils::make_money_format( $opt['old_price'] );
 
@@ -765,6 +770,11 @@ if( !ab_to( array( 'products' => 'edit' ) ) ) return false;
   $product = \query\main::product_infos( $id );
 
   $image = \site\images::upload( @$_FILES['image'], 'product_', array( 'path' => DIR . '/', 'max_size' => 1024, 'max_width' => 1000, 'max_height' => 1000, 'current' => $product->image ) );
+    if(!$image || $image == ''){
+        if(isset( $opt['image_url'] ) && $opt['image_url'] != ''){
+            $image = $opt['image_url'];
+        }
+    }
   $opt['price'] = \site\utils::make_money_format( $opt['price'] );
   $opt['old_price'] = \site\utils::make_money_format( $opt['old_price'] );
 

@@ -114,4 +114,40 @@ global $db;
 
 }
 
+    
+    public static function listCategoryMapping( $category = null ){
+        global $db;
+        $stmt = $db->stmt_init();
+        $search = "SELECT catID, category FROM " . DB_TABLE_PREFIX . "cj_category_mapping";
+        if($category && $category != ''){
+            $search.=" where category = '".$category."'";
+        }
+        //echo $search;
+        $stmt->prepare($search);
+        $stmt->execute();
+        $stmt->bind_result( $catID, $category );
+        $data = array();
+        while ( $stmt->fetch() ) {
+            $data[$category] = $catID;
+        }
+        
+        $stmt->close();
+        
+        return $data;
+    }
+    
+    public static function setCategoryMapping( $category, $catid, $catid_old ){
+        global $db;
+        $stmt = $db->stmt_init();
+        $search = ($catid_old && $catid_old > 0)?"update cj_category_mapping set catID = ? where category = ?":"insert into cj_category_mapping (catID,category) values (?,?)";
+        //echo $search;
+        $stmt->prepare($search);
+        $stmt->bind_param( "is", $catid, $category);
+        $ret = $stmt->execute();
+        
+        $stmt->close();
+        
+        return $ret;
+    }
+    
 }

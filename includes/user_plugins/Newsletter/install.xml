@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<plugin>
+
+  <name>Newsletter</name>
+  <image>icon.png</image>
+  <main_file>main.php</main_file>
+  <options_file>options.php</options_file>
+  <description>Newsletter Sendy Plugin.</description>
+  <menu_ready>true</menu_ready>
+  <menu>true</menu>
+
+  <extend>
+  <menu_add>
+  <title>Manager</title>
+  <url>Newsletter/main.php</url>
+  </menu_add>
+  <menu_add>
+  <title>Settings</title>
+  <url>Newsletter/options.php</url>
+  </menu_add>
+  </extend>
+
+  <min_version>2</min_version>
+
+  <uninstall>
+  <delete>
+  <options>sendy_api_key,sendy_from_name,sendy_from_email,sendy_reply_to,sendy_list_id,sendy_brand_id,sendy_query_string,sendy_url,sendy_lastsync,sendy_template_root</options>
+  </delete>
+  </uninstall>
+
+  <db_query>
+  <![CDATA[
+    INSERT INTO `{DB_PREFIX}options` (option_name, option_value) VALUES ('sendy_api_key', '')
+  ]]>
+  </db_query>
+
+  <db_query>
+  <![CDATA[
+    INSERT INTO `{DB_PREFIX}options` (option_name, option_value) VALUES ('sendy_from_name', '')
+  ]]>
+  </db_query>
+  
+  <db_query>
+  <![CDATA[
+    INSERT INTO `{DB_PREFIX}options` (option_name, option_value) VALUES ('sendy_from_email', '')
+  ]]>
+  </db_query>
+  
+  <db_query>
+      <![CDATA[
+          INSERT INTO `{DB_PREFIX}options` (option_name, option_value) VALUES ('sendy_reply_to', '')
+      ]]>
+  </db_query>
+  
+  <db_query>
+      <![CDATA[
+          INSERT INTO `{DB_PREFIX}options` (option_name, option_value) VALUES ('sendy_list_id', '')
+      ]]>
+  </db_query>
+  
+  <db_query>
+      <![CDATA[
+          INSERT INTO `{DB_PREFIX}options` (option_name, option_value) VALUES ('sendy_brand_id', '')
+      ]]>
+  </db_query>
+  
+  <db_query>
+      <![CDATA[
+          INSERT INTO `{DB_PREFIX}options` (option_name, option_value) VALUES ('sendy_query_string', '')
+      ]]>
+  </db_query>
+  
+  <db_query>
+      <![CDATA[
+          INSERT INTO `{DB_PREFIX}options` (option_name, option_value) VALUES ('sendy_url', '')
+      ]]>
+  </db_query>
+  
+  <db_query>
+      <![CDATA[
+          INSERT INTO `{DB_PREFIX}options` (option_name, option_value) VALUES ('sendy_lastsync', '')
+      ]]>
+  </db_query>
+  
+  <db_query>
+      <![CDATA[
+          INSERT INTO `{DB_PREFIX}options` (option_name, option_value) VALUES ('sendy_template_root', 'html/newsletter/')
+      ]]>
+  </db_query>
+
+</plugin>

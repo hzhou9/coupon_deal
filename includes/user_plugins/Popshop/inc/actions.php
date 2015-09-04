@@ -211,6 +211,41 @@ global $db;
         return $data;
     }
     
+    public static function listMerchantTypeMapping( $id = 0 ){
+        global $db;
+        $stmt = $db->stmt_init();
+        $search = "SELECT m.id as id, m.name as name, c.catID as catid FROM " . DB_TABLE_PREFIX . "popshop_merchant_type m LEFT JOIN " . DB_TABLE_PREFIX . "popshop_category_mapping c ON (m.id = c.merchant_type_id)";
+        if($id > 0){
+            $search.=" where m.id = ".$id;
+        }
+        //echo $search;
+        $stmt->prepare($search);
+        $stmt->execute();
+        $stmt->bind_result( $id,$name,$catid );
+        $data = array();
+        while ( $stmt->fetch() ) {
+            $data[$id] = array('name'=>$name,'catid'=>$catid);
+        }
+        
+        $stmt->close();
+        
+        return $data;
+    }
+    
+    public static function setMerchantTypeMapping( $id, $catid, $catid_old ){
+        global $db;
+        $stmt = $db->stmt_init();
+        $search = ($catid_old && $catid_old > 0)?"update popshop_category_mapping set catID = ? where merchant_type_id = ?":"insert into popshop_category_mapping (catID,merchant_type_id) values (?,?)";
+        //echo $search;
+        $stmt->prepare($search);
+        $stmt->bind_param( "ii", $catid, $id);
+        $ret = $stmt->execute();
+        
+        $stmt->close();
+        
+        return $ret;
+    }
+    
     public static function listDeals( $lookup =array() ){
         global $db;
         $stmt = $db->stmt_init();

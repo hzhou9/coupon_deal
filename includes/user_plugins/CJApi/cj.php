@@ -496,6 +496,9 @@ if( !empty( $_GET['search'] ) ) {
 }
 
 $links = $cj->linkSearch( $lookup );
+
+//var_dump($links);
+    
 $attributes = $links['links']['@attributes'];
 
 /* pagination */

@@ -10,6 +10,15 @@ if( !$GLOBALS['me']->is_admin ) die;
                 echo '<div class="a-success">Saved!</div>';
             else
                 echo '<div class="a-error">Error!</div>';
+        }else if( isset( $_POST['catid'] ) && isset( $_POST['catid_old'] )){
+            foreach($_POST['catid'] as $id=>$catid){
+                $catid = intval($catid);
+                if($catid != 0){
+                    $catid_old = intval($_POST['catid_old'][$id]);
+                    \plugin\Popshop\inc\actions::setMerchantTypeMapping( intval($id), $catid, $catid_old );
+                }
+            }
+            echo '<div class="a-success">Saved!</div>';
         }
     }
     $csrf = $_SESSION['slider_csrf'] = \site\utils::str_random(10);
@@ -29,6 +38,22 @@ function dosync(){
     }));
     var url = location.href.replace("options.php","sync.php")+"&csrf='.$csrf.'";
     $("#popshop_sync_ret").attr("src", url);
+}
+function setCatID(id){
+    var targetdiv = $("[name=\"div["+id+"]\"]");
+    if(targetdiv.find("select").length > 0){
+        return;
+    }
+    var template = $("[name=template_category]").clone();
+    var template_ok = $("[name=template_category_OK]").clone();
+    var template_cancel = $("[name=template_category_Cancel]").clone();
+    var catid = $("[name=\"catid["+id+"]\"]");
+    template.val(catid.val());
+    template_ok.click(function(){targetdiv.find("span").html(template.find("option:selected").text());catid.val(template.val());template_cancel.click();});
+    template_cancel.click(function(){template.remove();template_ok.unbind().remove();template_cancel.unbind().remove();});
+    targetdiv.append(template.show());
+    targetdiv.append(template_ok.show());
+    targetdiv.append(template_cancel.show());
 }
 </script>
 <iframe id="popshop_sync_ret" style="position:fixed;left:0px;top:0px;width:100%;height:100%;z-index:99;display:none;">
@@ -64,9 +89,64 @@ echo '<input type="hidden" name="csrf" value="' . $csrf . '" />
 <div class="form-table">
 <div class="row"><span>Last Update: <span class="info"><span>Last Update Time</span></span></span><div>' . date("Y-m-d H:i:s", \query\main::get_option( 'popshop_lastupdate' ) ) . '&nbsp;<button class="btn" onclick="dosync()">Sync</button></div><div id="popshop_sync_info"></div></div>
 </div>
-    
-';
+<br><br><br>
+<div class="title">
+<h2>Category Mapping</h2>
+<span>Category Mapping for Data Automation</span>
+</div>';
 
+$mappingdata = \plugin\Popshop\inc\actions::listMerchantTypeMapping();
+$categories = \query\main::group_categories( array( 'max' => 0 ) );
+        
+        echo '<select name="template_category" style="display:none;">';
+        foreach( $categories as $cat ) {
+            echo '<optgroup label="' . $cat['infos']->name . '">';
+            echo '<option value="' . $cat['infos']->ID . '">' . $cat['infos']->name . '</option>';
+            if( isset( $cat['subcats'] ) ) {
+                foreach( $cat['subcats'] as $subcat ) {
+                    echo '<option value="' . $subcat->ID . '">' . $subcat->name . '</option>';
+                }
+            }
+            echo '</optgroup>';
+        }
+        echo '</select>';
+        
+echo '
+<input type="button" value="OK" name="template_category_OK" style="display:none;"><input type="button" value="Cancel" name="template_category_Cancel" style="display:none;">
+<form action="#" method="POST">
+<div class="form-table">';
+        
+        foreach($mappingdata as $km=>$vm){
+            $catname = 'N/A';
+            $catid = 0;
+            if($vm['catid'] && $vm['catid'] > 0){
+                foreach( $categories as $cat ) {
+                    if($cat['infos']->ID == $vm['catid']){
+                        $catname = $cat['infos']->name;
+                        $catid = $cat['infos']->ID;
+                        break;
+                    }
+                    if( isset( $cat['subcats'] ) ) {
+                        foreach( $cat['subcats'] as $subcat ) {
+                            if($subcat->ID == $vm['catid']){
+                                $catname = $subcat->name;
+                                $catid = $subcat->ID;
+                            }
+                        }
+                    }
+                    if($catid != 0){
+                        break;
+                    }
+                }
+            }
+            echo '<div class="row"><span>'.$vm['name'].': </span><div name="div['.$km.']"><span style="text-decoration: underline;" onclick="setCatID('.$km.');">'.$catname.'</span><input type="hidden" name="catid[' . $km . ']" value="' . $catid . '" /><input type="hidden" name="catid_old[' . $km . ']" value="' . $catid . '" /></div></div>';
+        }
+
+echo '</div><input type="hidden" name="csrf" value="' . $csrf . '" />
+<button class="btn">Save</button>
+    
+</form>';
+    
 break;
 
 }

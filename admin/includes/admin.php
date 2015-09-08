@@ -46,16 +46,23 @@ if( !ab_to( array( 'categories' => 'add' ) ) ) return false;
     return false;
   }
   $stmt = $db->stmt_init();
-  $stmt->prepare( "INSERT INTO " . DB_TABLE_PREFIX . "categories (subcategory, user, name, description, meta_title, meta_desc, date) VALUES (?, ?, ?, ?, ?, ?, NOW())" );
-  $stmt->bind_param( "iissss", $opt['category'], $GLOBALS['me']->ID, $opt['name'], $opt['description'], $opt['meta_title'], $opt['meta_desc'] );
+  $stmt->prepare( "INSERT INTO " . DB_TABLE_PREFIX . "categories (istop, connect, user, name, description, meta_title, meta_desc, date) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())" );
+  $stmt->bind_param( "isissss", $opt['istop'], $opt['connect'], $GLOBALS['me']->ID, $opt['name'], $opt['description'], $opt['meta_title'], $opt['meta_desc'] );
   $execute = $stmt->execute();
-  $stmt->close();
 
   if( $execute ) {
-    return true;
+      $stmt->prepare( "SELECT LAST_INSERT_ID() FROM " . DB_TABLE_PREFIX . "categories" );
+      $stmt->execute();
+      $stmt->bind_result( $id );
+      $stmt->fetch();
+      $stmt->close();
+      
+      return $id;
   }
 
-  return false;
+    $stmt->close();
+
+  return 0;
 
 }
 
@@ -69,13 +76,14 @@ if( !ab_to( array( 'categories' => 'edit' ) ) ) return false;
 
   $opt = array_map( 'trim', $opt );
 
-  if( empty( $opt['name'] ) ) {
-    return false;
-  }
-
   $stmt = $db->stmt_init();
-  $stmt->prepare( "UPDATE " . DB_TABLE_PREFIX . "categories SET subcategory = ?, name = ?, description = ?, meta_title = ?, meta_desc = ? WHERE id = ?" );
-  $stmt->bind_param( "issssi", $opt['category'], $opt['name'], $opt['description'], $opt['meta_title'], $opt['meta_desc'], $id );
+    if( empty( $opt['name'] ) && !empty( $opt['connect'] ) ) {
+        $stmt->prepare( "UPDATE " . DB_TABLE_PREFIX . "categories SET connect = ? WHERE id = ?" );
+        $stmt->bind_param( "si", $opt['connect'], $id );
+    }else{
+  $stmt->prepare( "UPDATE " . DB_TABLE_PREFIX . "categories SET connect = ?, name = ?, description = ?, meta_title = ?, meta_desc = ? WHERE id = ?" );
+  $stmt->bind_param( "sssssi", $opt['connect'], $opt['name'], $opt['description'], $opt['meta_title'], $opt['meta_desc'], $id );
+    }
   $execute = $stmt->execute();
   $stmt->close();
 

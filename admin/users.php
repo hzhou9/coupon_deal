@@ -30,7 +30,7 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' && isset( $_POST['csrf'] ) && check_csr
 
   foreach( array_unique( array_filter( explode( ',', $_POST['temails'] ) ) ) as $email ) {
 
-  if( \site\mail::send( trim( $email ), $_POST['subject'], array( 'template' => 'sendmail', 'path' => '../', 'from_email' => $_POST['femail'], 'from_name' => $_POST['fname'], 'reply_to' => $_POST['femail'], 'reply_name' => $_POST['fname'] ), array( 'text' => nl2br( $_POST['text'] ) ) ) ) {
+  if( \site\mail::send( trim( $email ), $_POST['subject'], array( 'template' => 'sendmail', 'path' => '../', 'from_email' => $_POST['femail'], 'from_name' => $_POST['fname'], 'reply_to' => $_POST['femail'], 'reply_name' => $_POST['fname'] ), array( 'text' => nltobr( $_POST['text'] ) ) ) ) {
     $suc++;
   } else $err++;
 

@@ -8,6 +8,7 @@ default:
 
         echo '<script>
         function setCatID(id){
+            //id = decodeURIComponent(id);
             var targetdiv = $("[name=\"div["+id+"]\"]");
             if(targetdiv.find("select").length > 0){
                 return;
@@ -17,7 +18,11 @@ default:
             var template_cancel = $("[name=template_category_Cancel]").clone();
             var catid = $("[name=\"catid["+id+"]\"]");
             template.val(catid.val());
-            template_ok.click(function(){targetdiv.find("span").html(template.find("option:selected").text());catid.val(template.val());template_cancel.click();});
+            template_ok.click(function(){
+                targetdiv.find("span").html(template.find("option:selected").text());
+                catid.val(template.val());
+                template_cancel.click();
+            });
             template_cancel.click(function(){template.remove();template_ok.unbind().remove();template_cancel.unbind().remove();});
             targetdiv.append(template.show());
             targetdiv.append(template_ok.show());
@@ -53,6 +58,9 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' && isset( $_POST['csrf'] ) && check_csr
   else
   echo '<div class="a-error">Error!</div>';
     }else if( isset( $_POST['catid'] ) && isset( $_POST['catid_old'] )){
+        //var_dump($_POST['catid']);
+        //var_dump($_POST['catid_old']);
+        
         foreach($_POST['catid'] as $id=>$catid){
             $catid = intval($catid);
             if($catid != 0){
@@ -96,19 +104,10 @@ $category_mapping = \plugin\CJApi\inc\actions::listCategoryMapping();
             }
         }
         
-$categories = \query\main::group_categories( array( 'max' => 0 ) );
+$categories_while = \query\main::while_categories( array( 'max' => 0, 'show' => 'subcats' ) );
         
 echo '<select name="template_category" style="display:none;">';
-        foreach( $categories as $cat ) {
-            echo '<optgroup label="' . $cat['infos']->name . '">';
-            echo '<option value="' . $cat['infos']->ID . '">' . $cat['infos']->name . '</option>';
-            if( isset( $cat['subcats'] ) ) {
-                foreach( $cat['subcats'] as $subcat ) {
-                    echo '<option value="' . $subcat->ID . '">' . $subcat->name . '</option>';
-                }
-            }
-            echo '</optgroup>';
-        }
+        foreach( $categories_while as $cat )echo '<option value="' . $cat->ID . '">' . $cat->name . '</option>';
 echo '</select>
 <input type="button" value="OK" name="template_category_OK" style="display:none;"><input type="button" value="Cancel" name="template_category_Cancel" style="display:none;">
 <form action="#" method="POST">
@@ -118,26 +117,15 @@ echo '</select>
             $catname = 'N/A';
             $catid = 0;
             if($vm > 0){
-                foreach( $categories as $cat ) {
-                    if($cat['infos']->ID == $vm){
-                        $catname = $cat['infos']->name;
-                        $catid = $cat['infos']->ID;
-                        break;
-                    }
-                    if( isset( $cat['subcats'] ) ) {
-                        foreach( $cat['subcats'] as $subcat ) {
-                            if($subcat->ID == $vm){
-                                $catname = $subcat->name;
-                                $catid = $subcat->ID;
-                            }
-                        }
-                    }
-                    if($catid != 0){
+                foreach( $categories_while as $cat ){
+                    if($cat->ID == $vm){
+                        $catname = $cat->name;
+                        $catid = $cat->ID;
                         break;
                     }
                 }
             }
-            echo '<div class="row"><span>'.$km.': </span><div name="div['.$km.']"><span style="text-decoration: underline;" onclick="setCatID(\''.$km.'\');">'.$catname.'</span><input type="hidden" name="catid[' . $km . ']" value="' . $catid . '" /><input type="hidden" name="catid_old[' . $km . ']" value="' . $catid . '" /></div></div>';
+            echo '<div class="row"><span>'.$km.': </span><div name="div['.$km.']"><span style="text-decoration: underline;" onclick="setCatID(\''.addslashes($km).'\');">'.$catname.'</span><input type="hidden" name="catid[' . $km . ']" value="' . $catid . '" /><input type="hidden" name="catid_old[' . $km . ']" value="' . $catid . '" /></div></div>';
         }
         
 echo '</div><input type="hidden" name="csrf" value="' . $csrf . '" />

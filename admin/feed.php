@@ -865,7 +865,7 @@ try {
 
       if( !empty( $item->Description ) ) {
       echo '<a href="javascript:void(0)" onclick="$(this).show_next( { after_action: \'\', element: \'div\' } ); return false;">' . $LANG['description'] . '</a>';
-      echo '<div style="display: none; margin: 10px 0; font-size: 12px;">' . nl2br( $item->Description ) . '</div>';
+      echo '<div style="display: none; margin: 10px 0; font-size: 12px;">' . nltobr( $item->Description ) . '</div>';
       }
 
       echo '</div>
@@ -1099,7 +1099,7 @@ try {
 
       if( !empty( $item->Description ) ) {
         echo '<a href="javascript:void(0)" onclick="$(this).show_next( { after_action: \'\', element: \'div\' } ); return false;">' . $LANG['description'] . '</a>';
-        echo '<div style="display: none; margin: 10px 0; font-size: 12px;">' . nl2br( $item->Description ) . '</div>';
+        echo '<div style="display: none; margin: 10px 0; font-size: 12px;">' . nltobr( $item->Description ) . '</div>';
       }
 
       echo '</div>

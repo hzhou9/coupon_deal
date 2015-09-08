@@ -320,6 +320,41 @@ foreach($storedata as $data){
   return $importnum;
 
 }
+
+    public static function list_store_bind( $name ) {
+        $ret = array();
+        global $db;
+        $search = "SELECT id,popshopID,name,visible FROM stores WHERE name like '%".$name."%'";
+        $stmt = $db->stmt_init();
+        $stmt->prepare( $search );
+        $stmt->execute();
+        $stmt->bind_result( $id,$popshopID,$name,$visible );
+        while($stmt->fetch()){
+            $ret[] = array('id'=>$id,'name'=>$name,'popshopID'=>$popshopID,'visible'=>$visible);
+        }
+        $stmt->close();
+        return $ret;
+    }
+    
+    public static function bind_store( $id, $popshopID, $popshopID_old ) {
+        global $db;
+        $stmt = $db->stmt_init();
+        if($popshopID != $popshopID_old){
+            $stmt->prepare( "update stores set popshopID=? WHERE id=?" );
+            $stmt->bind_param( "ii", $popshopID, $id );
+            $stmt->execute();
+            if($popshopID_old > 0){
+                $stmt->prepare( "UPDATE popshop_merchant SET storeID = 0 WHERE id = ?" );
+                $stmt->bind_param( "i", $popshopID_old );
+                $stmt->execute();
+            }
+        }
+        $stmt->prepare( "UPDATE popshop_merchant SET storeID = ? WHERE id = ?" );
+        $stmt->bind_param( "ii", $id, $popshopID );
+        $ret = $stmt->execute();
+        $stmt->close();
+        return $ret;
+    }
     
 public static function check_store( $id ) {
     global $db;
@@ -382,7 +417,7 @@ if(!isset($data['store']) || !isset($data['category']) || !isset($data['popular'
     $category = isset($data['category'])?$data['category']:$store['category'];
     $popular = isset($data['popular'])?$data['popular']:$store['popular'];
     $exclusive = isset($data['exclusive'])?$data['exclusive']:0;
-    $description = isset($data['description'])?$data['description']:($data['site_wide']?'Applicable across the entire merchant website':'Applicable to the specific product or category');
+    $description = isset($data['description'])?$data['description']:'';
     $tags = '';
     if(isset($data['tags'])){
         $tags = $data['tags'];
@@ -397,9 +432,16 @@ if(!isset($data['store']) || !isset($data['category']) || !isset($data['popular'
                     if($tags == ''){
                         $tags = $deal_types[intval($arr)];
                     }else{
-                        $tags .= ', '.$deal_types[intval($arr)];
+                        $tags .= ','.$deal_types[intval($arr)];
                     }
                 }
+            }
+        }
+        if($data['site_wide']){
+            if($tags == ''){
+                $tags = 'Site-Wide';
+            }else{
+                $tags .= ',Site-Wide';
             }
         }
     }
@@ -428,5 +470,142 @@ if(!isset($data['store']) || !isset($data['category']) || !isset($data['popular'
   return $importnum;
 
 }
+    
+    public static function add_store_auto( $visible ) {
+        $ret = array('done'=>0,'fail'=>0,'pass'=>0);
+        global $db;
+        $stmt = $db->stmt_init();
+        $search = "SELECT id,name,merchant_type,logo_url,url FROM " . DB_TABLE_PREFIX . "popshop_merchant WHERE storeID = 0";
+        $stmt->prepare( $search );
+        $stmt->execute();
+        $stmt->bind_result( $id,$name,$merchant_type,$logo_url,$url );
+        $popshop_merchants = array();
+        while($stmt->fetch()){
+            $popshop_merchants[] = array('id'=>$id,'name'=>$name,'merchant_type'=>$merchant_type,'logo_url'=>$logo_url,'url'=>$url);
+        }
+        if(count($popshop_merchants) > 0){
+            //get category mapping
+            $search = "SELECT catID,merchant_type_id FROM " . DB_TABLE_PREFIX . "popshop_category_mapping";
+            $stmt->prepare( $search );
+            $stmt->execute();
+            $stmt->bind_result( $catID,$merchant_type_id );
+            $popshop_category_mapping = array();
+            while($stmt->fetch()){
+                $popshop_category_mapping[$merchant_type_id] = $catID;
+            }
+            //do import
+            foreach($popshop_merchants as $popshop_merchant){
+                if(!isset($popshop_category_mapping[$popshop_merchant['merchant_type']])){
+                    $ret['pass']++;
+                    continue;
+                }
+                $stmt->prepare( "INSERT INTO " . DB_TABLE_PREFIX . "stores (popshopID, category, name, link, image, visible, lastupdate, date) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())" );
+                
+                $stmt->bind_param( "iisssi", $popshop_merchant['id'], $popshop_category_mapping[$popshop_merchant['merchant_type']], $popshop_merchant['name'], $popshop_merchant['url'], $popshop_merchant['logo_url'], $visible );
+                $execute = $stmt->execute();
+                
+                if( $execute ) {//update popshop table
+                    $stmt->prepare( "SELECT LAST_INSERT_ID() FROM " . DB_TABLE_PREFIX . "stores" );
+                    $stmt->execute();
+                    $stmt->bind_result( $id );
+                    $stmt->fetch();
+                    
+                    $stmt->prepare( "UPDATE popshop_merchant SET storeID = ? WHERE id = ?" );
+                    $stmt->bind_param( "ii", $id, $popshop_merchant['id'] );
+                    $execute = $stmt->execute();
+                    
+                    $ret['done']++;
+                }else{
+                    $ret['fail']++;
+                }
+            }
+        }
+        
+        return $ret;
+    }
+    
+    public static function add_item_auto(  ) {
+        $ret = array('done'=>0,'fail'=>0,'pass'=>0);
+        global $db;
+        $stmt = $db->stmt_init();
+        $search = "SELECT id,merchant,code,deal_type,start_on,end_on,name,site_wide,url FROM " . DB_TABLE_PREFIX . "popshop_coupon WHERE couponID = 0";
+        $stmt->prepare( $search );
+        $stmt->execute();
+        $stmt->bind_result( $id,$merchant,$code,$deal_type,$start_on,$end_on,$name,$site_wide,$url );
+        $popshop_coupons = array();
+        while($stmt->fetch()){
+            $popshop_coupons[] = array('id'=>$id,'merchant'=>$merchant,'code'=>$code,'deal_type'=>$deal_type,'start_on'=>$start_on,'end_on'=>$end_on,'name'=>$name,'site_wide'=>$site_wide,'url'=>$url);
+        }
+        if(count($popshop_coupons) > 0){
+            //do import
+            $stores = array();
+            $deal_types = null;
+            foreach($popshop_coupons as $popshop_coupon){
+                if(!isset($stores[$popshop_coupon['merchant']])){
+                    $search = "SELECT id,category,image,popular,visible FROM " . DB_TABLE_PREFIX . "stores WHERE popshopID = ".$popshop_coupon['merchant'];
+                    $stmt->prepare( $search );
+                    $stmt->execute();
+                    $stmt->bind_result( $id,$category,$image,$popular,$visible );
+                    if($stmt->fetch()){
+                        $stores[$popshop_coupon['merchant']] = array('id'=>$id,'category'=>$category,'image'=>$image,'popular'=>$popular,'visible'=>$visible);
+                    }else{
+                        $stores[$popshop_coupon['merchant']] = NULL;
+                    }
+                }
+                if(!$stores[$popshop_coupon['merchant']]){
+                    $ret['pass']++;
+                    continue;
+                }
+                $stmt->prepare( "INSERT INTO " . DB_TABLE_PREFIX . "coupons (popshopID, store, category, popular, title, link, tags, code, visible, start, expiration, lastupdate, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())" );
+                
+                $storeid = $stores[$popshop_coupon['merchant']]['id'];
+                $category = $stores[$popshop_coupon['merchant']]['category'];
+                $popular = $stores[$popshop_coupon['merchant']]['popular'];
+                $tags = '';
+                if($popshop_coupon['deal_type'] != ''){
+                    if(!$deal_types){
+                        $deal_types = actions::listDealTypes();
+                    }
+                    $arrs = explode(',',$popshop_coupon['deal_type']);
+                    foreach($arrs as $arr){
+                        if(isset($deal_types[intval($arr)])){
+                            if($tags == ''){
+                                $tags = $deal_types[intval($arr)];
+                            }else{
+                                $tags .= ','.$deal_types[intval($arr)];
+                            }
+                        }
+                    }
+                }
+                if($popshop_coupon['site_wide']){
+                    if($tags == ''){
+                        $tags = 'Site-Wide';
+                    }else{
+                        $tags .= ',Site-Wide';
+                    }
+                }
+                $publish = $stores[$popshop_coupon['merchant']]['visible'];
+                
+                $stmt->bind_param( "iiiissssiss", $popshop_coupon['id'], $storeid, $category, $popular, $popshop_coupon['name'],  $popshop_coupon['url'], $tags, $popshop_coupon['code'], $publish, $popshop_coupon['start_on'], $popshop_coupon['end_on'] );
+                $execute = $stmt->execute();
+                if( $execute ) {
+                    $stmt->prepare( "SELECT LAST_INSERT_ID() FROM " . DB_TABLE_PREFIX . "stores" );
+                    $stmt->execute();
+                    $stmt->bind_result( $id );
+                    $stmt->fetch();
+                    
+                    $stmt->prepare( "UPDATE popshop_coupon SET couponID = ? WHERE id = ?" );
+                    $stmt->bind_param( "ii", $id, $popshop_coupon['id'] );
+                    $execute = $stmt->execute();
+                    
+                    $ret['done']++;
+                }else{
+                    $ret['fail']++;
+                }
+            }
+        }
+        
+        return $ret;
+    }
 
 }

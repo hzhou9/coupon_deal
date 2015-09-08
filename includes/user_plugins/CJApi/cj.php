@@ -131,16 +131,8 @@ echo '<div class="form-table">
 
 <div class="row"><span>Category:</span>
 <div><select name="store[Category]">';
-foreach( \query\main::group_categories( array( 'max' => 0 ) ) as $cat ) {
-  echo '<optgroup label="' . $cat['infos']->name . '">';
-  echo '<option value="' . $cat['infos']->ID . '">' . $cat['infos']->name . '</option>';
-  if( isset( $cat['subcats'] ) ) {
-    foreach( $cat['subcats'] as $subcat ) {
-      echo '<option value="' . $subcat->ID . '">' . $subcat->name . '</option>';
-    }
-  }
-  echo '</optgroup>';
-}
+$categories_while = \query\main::while_categories( array( 'max' => 0, 'show' => 'subcats' ) );
+foreach( $categories_while as $cat )echo '<option value=\"' . $cat->ID . '\">' . $cat->name . '</option>';
 echo '</select></div></div>';
     
 echo '<div class="row"><span>Name:</span><div><input type="text" name="store[Name]" value="' . ( isset( $store['Name'] ) ? $store['Name'] : '' ) . '" required /></div></div>
@@ -295,16 +287,8 @@ echo '<div class="form-table">
 
 <div class="row"><span>Category:</span>
 <div><select name="coupon[Category]">';
-foreach( \query\main::group_categories( array( 'max' => 0 ) ) as $cat ) {
-  echo '<optgroup label="' . $cat['infos']->name . '">';
-  echo '<option value="' . $cat['infos']->ID . '"' . ( $store->catID == $cat['infos']->ID ? ' selected' : '' ) . '>' . $cat['infos']->name . '</option>';
-  if( isset( $cat['subcats'] ) ) {
-    foreach( $cat['subcats'] as $subcat ) {
-      echo '<option value="' . $subcat->ID . '"' . ( $store->catID == $subcat->ID ? ' selected' : '' ) . '>' . $subcat->name . '</option>';
-    }
-  }
-  echo '</optgroup>';
-}
+    $categories_while = \query\main::while_categories( array( 'max' => 0, 'show' => 'subcats' ) );
+    foreach( $categories_while as $cat )echo '<option value=\"' . $cat->ID . '\"' . ( $store->catID == $cat->ID ? ' selected' : '' ) . '>' . $cat->name . '</option>';
 echo '</select></div></div>
 
 <div class="row"><span>Name:</span><div><input type="text" name="coupon[Title]" value="' . ( isset( $coupon['Title'] ) ? $coupon['Title'] : '' ) . '" required /></div></div>
@@ -753,16 +737,8 @@ echo '<form action="?plugin=CJApi/cj.php&amp;action=import_stores#" method="POST
 
 Category: ';
 echo '<select name="category">';
-  foreach( \query\main::group_categories( array( 'max' => 0 ) ) as $cat ) {
-    echo '<optgroup label="' . $cat['infos']->name . '">';
-    echo '<option value="' . $cat['infos']->ID . '">' . $cat['infos']->name . '</option>';
-    if( isset( $cat['subcats'] ) ) {
-    foreach( $cat['subcats'] as $subcat ) {
-      echo '<option value="' . $subcat->ID . '">' . $subcat->name . '</option>';
-    }
-    }
-    echo '</optgroup>';
-  }
+    $categories_while = \query\main::while_categories( array( 'max' => 0, 'show' => 'subcats' ) );
+    foreach( $categories_while as $cat )echo '<option value=\"' . $cat->ID . '\"' . ( $store->catID == $cat->ID ? ' selected' : '' ) . '>' . $cat->name . '</option>';
 echo '</select>
 
 <button class="btn">Import all</button>';

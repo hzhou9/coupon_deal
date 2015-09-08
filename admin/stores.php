@@ -31,16 +31,8 @@ echo '<form action="?download=export_stores_csv.php" method="POST">
 <div class="row"><span>' . $LANG['form_category'] . ':</span>
 <div><select name="category">
 <option value="0">' . $LANG['stores_option_all'] . '</option>';
-foreach( \query\main::group_categories( array( 'max' => 0 ) ) as $cat ) {
-  echo '<optgroup label="' . $cat['infos']->name . '">';
-  echo '<option value="' . $cat['infos']->ID . '">' . $cat['infos']->name . '</option>';
-  if( isset( $cat['subcats'] ) ) {
-    foreach( $cat['subcats'] as $subcat ) {
-      echo '<option value="' . $subcat->ID . '">' . $subcat->name . '</option>';
-    }
-  }
-  echo '</optgroup>';
-}
+        $categories_while = \query\main::while_categories( array( 'max' => 0, 'show' => 'subcats' ) );
+        foreach( $categories_while as $cat )echo '<option value="' . $cat->ID . '">' . $cat->name . '</option>';
 echo '</select></div></div>
 
 <div class="row"><span>' . $LANG['form_datefrom'] . ':</span><div><input type="date" name="date[from]" value="2000-01-01" /></div></div>
@@ -105,16 +97,8 @@ echo '<div class="form-table">
 <div class="row"><span>' . $LANG['form_in_category'] . ':</span>
 <div><select name="category">
 <option value="0">' . $LANG['option_no_category'] . '</option>';
-foreach( \query\main::group_categories( array( 'max' => 0 ) ) as $cat ) {
-  echo '<optgroup label="' . $cat['infos']->name . '">';
-  echo '<option value="' . $cat['infos']->ID . '">' . $cat['infos']->name . '</option>';
-  if( isset( $cat['subcats'] ) ) {
-    foreach( $cat['subcats'] as $subcat ) {
-      echo '<option value="' . $subcat->ID . '">' . $subcat->name . '</option>';
-    }
-  }
-  echo '</optgroup>';
-}
+        $categories_while = \query\main::while_categories( array( 'max' => 0, 'show' => 'subcats' ) );
+        foreach( $categories_while as $cat )echo '<option value="' . $cat->ID . '">' . $cat->name . '</option>';
 echo '</select></div></div>
 
 <div class="row"><span>' . $LANG['form_csv_file'] . ':</span><div><input type="file" name="file" value="" /></div></div>
@@ -171,16 +155,8 @@ echo '<div class="form-table">
 
 <div class="row"><span>' . $LANG['form_category'] . ':</span>
 <div><select name="category">';
-foreach( \query\main::group_categories( array( 'max' => 0 ) ) as $cat ) {
-  echo '<optgroup label="' . $cat['infos']->name . '">';
-  echo '<option value="' . $cat['infos']->ID . '">' . $cat['infos']->name . '</option>';
-  if( isset( $cat['subcats'] ) ) {
-    foreach( $cat['subcats'] as $subcat ) {
-      echo '<option value="' . $subcat->ID . '">' . $subcat->name . '</option>';
-    }
-  }
-  echo '</optgroup>';
-}
+        $categories_while = \query\main::while_categories( array( 'max' => 0, 'show' => 'subcats' ) );
+        foreach( $categories_while as $cat )echo '<option value="' . $cat->ID . '">' . $cat->name . '</option>';
 echo '</select></div></div>
 
 <div class="row"><span>' . $LANG['form_name'] . ':</span><div><input type="text" name="name" value="" required /></div></div>
@@ -297,16 +273,8 @@ echo '<div class="form-table">
 
 <div class="row"><span>' . $LANG['form_category'] . ':</span>
 <div><select name="category">';
-foreach( \query\main::group_categories( array( 'max' => 0 ) ) as $cat ) {
-  echo '<optgroup label="' . $cat['infos']->name . '">';
-  echo '<option value="' . $cat['infos']->ID . '"' . ( $info->catID == $cat['infos']->ID ? ' selected' : '' ) . '>' . $cat['infos']->name . '</option>';
-  if( isset( $cat['subcats'] ) ) {
-    foreach( $cat['subcats'] as $subcat ) {
-      echo '<option value="' . $subcat->ID . '"' . ( $info->catID == $subcat->ID ? ' selected' : '' ) . '>' . $subcat->name . '</option>';
-    }
-  }
-  echo '</optgroup>';
-}
+    $categories_while = \query\main::while_categories( array( 'max' => 0, 'show' => 'subcats' ) );
+    foreach( $categories_while as $cat )echo '<option value="' . $cat->ID . '"'. ( $info->catID == $cat->ID ? ' selected' : '' ) .'>' . $cat->name . '</option>';
 echo '</select></div></div>
 
 <div class="row"><span>' . $LANG['form_name'] . ':</span><div><input type="text" name="name" value="' . $info->name . '" required /></div></div>
@@ -479,16 +447,8 @@ echo '</select>
 
  <select name="category">
 <option value="">' . $LANG['all_categories'] . '</option>';
-foreach( \query\main::group_categories( array( 'max' => 0 ) ) as $cat ) {
-  echo '<optgroup label="' . $cat['infos']->name . '">';
-  echo '<option value="' . $cat['infos']->ID . '"' . ( isset( $_GET['category'] ) && $_GET['category'] == $cat['infos']->ID ? ' selected' : '' ) . '>' . $cat['infos']->name . '</option>';
-  if( isset( $cat['subcats'] ) ) {
-    foreach( $cat['subcats'] as $subcat ) {
-      echo '<option value="' . $subcat->ID . '"' . ( isset( $_GET['category'] ) && $_GET['category'] == $subcat->ID ? ' selected' : '' ) . '>' . $subcat->name . '</option>';
-    }
-  }
-  echo '</optgroup>';
-}
+        $categories_while = \query\main::while_categories( array( 'max' => 0, 'show' => 'subcats' ) );
+        foreach( $categories_while as $cat )echo '<option value="' . $cat->ID . '"'. ( isset( $_GET['category'] ) && $_GET['category'] == $cat->ID ? ' selected' : '' ) .'>' . $cat->name . '</option>';
 echo '</select>';
 
 if( isset( $_GET['search'] ) ) {

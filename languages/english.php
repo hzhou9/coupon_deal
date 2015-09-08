@@ -297,6 +297,7 @@ $LANG['form_mobilev'] = 'Mobile View';
 $LANG['form_publish'] = 'Publish';
 $LANG['form_category'] = 'Category';
 $LANG['form_subcategoryfor'] = 'Subcategory for';
+$LANG['form_subcategoryown'] = 'owns Subcategory';
 $LANG['form_description'] = 'Description';
 $LANG['form_code'] = 'Code'; // code for coupons
 $LANG['form_start_date'] = 'Start Date';

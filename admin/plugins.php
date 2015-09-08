@@ -562,7 +562,7 @@ foreach( admin_query::while_plugins( array_merge( array( 'orderby' => (isset( $_
 
   if( !empty( $item->description ) ) {
   echo '<a href="javascript:void(0)" onclick="$(this).show_next( { after_action: \'\', element: \'div\' } ); return false;">' . $LANG['description'] . '</a>';
-  echo '<div style="display: none; margin: 10px 0; font-size: 12px;">' . nl2br( $item->description ) . '</div>';
+  echo '<div style="display: none; margin: 10px 0; font-size: 12px;">' . nltobr( $item->description ) . '</div>';
   }
 
   echo '</div>

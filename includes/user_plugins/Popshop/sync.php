@@ -1,8 +1,9 @@
 <?php
     
-    if( !$GLOBALS['me']->is_admin ) die;
+    //if( !$GLOBALS['me']->is_admin ) die;
 
     if(isset( $_GET['csrf'] ) && ($_GET['csrf'] == \query\main::get_option( 'cron_secret' ) || check_csrf( $_GET['csrf'], 'slider_csrf' ))){//do sync
+        if(!isset($_GET['nosync'])){
         $page = 1;
         $dup_deals_count = 0;$dup_deals_count_max = 10;//stop querying server when we believe there is no new data
         $deals_more = 0;
@@ -61,9 +62,19 @@
             }else{
             $deals_more=0;
             }
+            
         }while($deals_more > 0 && $dup_deals_count < $dup_deals_count_max);
         actions::set_option( array( 'popshop_lastupdate' => time() ) );
         echo 'sync success!<br>'.$merchants_import_total.' new stores<br>'.$deals_import_total.' new coupons<br>';
+        }
+        
+        //4.import to couponcms data
+        if(isset($_GET['auto'])){
+            $visible = isset($_GET['visible'])?intval($_GET['visible']):0;
+            $ret_store = \plugin\Popshop\inc\actions::add_store_auto($visible);
+            $ret_item = \plugin\Popshop\inc\actions::add_item_auto();
+            echo 'auto-import done!<br>store:'.$ret_store['done'].'done, '.$ret_store['pass'].'pass, '.$ret_store['fail'].'fail<br>item:'.$ret_item['done'].'done, '.$ret_item['pass'].'pass, '.$ret_item['fail'].'fail<br>';
+        }
     }
 
     echo '<div><button class="btn" onclick="parent.location.reload();">Close</button></div>';

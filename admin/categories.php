@@ -24,25 +24,57 @@ echo '</div>';
 
 if( $_SERVER['REQUEST_METHOD'] == 'POST' && isset( $_POST['csrf'] ) && check_csrf( $_POST['csrf'], 'categories_csrf' ) ) {
 
-  if( isset( $_POST['name'] ) && isset( $_POST['text'] ) && isset( $_POST['meta_title'] ) && isset( $_POST['meta_desc'] ) )
-  if( actions::add_category( array( 'name' => $_POST['name'], 'description' => $_POST['text'], 'category' => ( isset( $_GET['subcat'] ) && isset( $_POST['category'] ) ? (int) $_POST['category'] : 0 ), 'meta_title' => $_POST['meta_title'], 'meta_desc' => $_POST['meta_desc'] ) ) )
-  echo '<div class="a-success">' . $LANG['msg_added'] . '</div>';
-  else
-  echo '<div class="a-error">' . $LANG['msg_error'] . '</div>';
+if( isset( $_POST['name'] ) && isset( $_POST['text'] ) && isset( $_POST['meta_title'] ) && isset( $_POST['meta_desc'] ) ){
+    $connect = '|';
+    $connectids = array();
+    if(isset($_POST['category'])){
+    foreach($_POST['category'] as $index=>$val){
+        $v = intval($val);
+        if($v > 0){
+            $connect .= $v.'|';
+            $connectids[] = $v;
+        }
+    }
+    }
 
+    if( $id = actions::add_category( array( 'istop'=>isset( $_GET['subcat'] )?0:1, 'connect'=>$connect, 'name' => $_POST['name'], 'description' => $_POST['text'], 'meta_title' => $_POST['meta_title'], 'meta_desc' => $_POST['meta_desc'] ) ) ){
+        //add new connections
+        foreach($connectids as $connectid){
+            $info2 = \query\main::category_infos( $connectid );
+            $connect = $info2->connect.$id."|";
+            actions::edit_category( $connectid, array( 'connect' => $connect ) );
+        }
+        
+        echo '<div class="a-success">' . $LANG['msg_added'] . '</div>';
+    }
+    else{
+        echo '<div class="a-error">' . $LANG['msg_error'] . '</div>';
+    }
+
+}
+    
 }
 
 $csrf = $_SESSION['categories_csrf'] = \site\utils::str_random(10);
-
-echo '<div class="form-table">
+$categories_while = \query\main::while_categories( array( 'max' => 0, 'show' => 'cats' ) );
+echo '<script>
+        var lastnum = 0;
+        function addSubcategory(){
+            lastnum++;
+            var categorysel = $("<select name=\"category["+lastnum+"]\"><option value=\"0\" selected>' . $LANG['no_category_select'] . '</option>';
+foreach( $categories_while as $cat )echo '<option value=\"' . $cat->ID . '\">' . $cat->name . '</option>';
+echo '</select>");
+            $("[name=div_category]").append(categorysel);
+        }
+</script><div class="form-table">
 
 <form action="#" method="POST" autocomplete="off">';
 
 if( isset( $_GET['subcat'] ) ) {
   echo '<div class="row"><span>' . $LANG['form_subcategoryfor'] . ':</span>
-  <div><select name="category">';
+  <div name="div_category"><input type="button" value="Add" onclick="addSubcategory();"><select name="category[0]">';
   echo '<option value="0">' . $LANG['no_category_select'] . '</option>';
-  foreach( \query\main::while_categories( array( 'max' => 0, 'show' => 'cats' ) ) as $cat ) echo '<option value="' . $cat->ID . '"' . ( isset( $_GET['cat'] ) && (int) $_GET['cat'] === $cat->ID ? ' selected' : '' ) . '>' . $cat->name . '</option>';
+  foreach( $categories_while as $cat ) echo '<option value="' . $cat->ID . '"' . ( isset( $_GET['cat'] ) && (int) $_GET['cat'] === $cat->ID ? ' selected' : '' ) . '>' . $cat->name . '</option>';
   echo '</select></div></div>';
 }
 
@@ -118,31 +150,84 @@ if( $category_exists ) {
 
 if( $_SERVER['REQUEST_METHOD'] == 'POST' && isset( $_POST['csrf'] ) && check_csrf( $_POST['csrf'], 'categories_csrf' ) ) {
 
-  if( isset( $_POST['name'] ) && isset( $_POST['text'] ) && isset( $_POST['meta_title'] ) && isset( $_POST['meta_desc'] ) )
-  if( actions::edit_category( $_GET['id'], array( 'name' => $_POST['name'], 'description' => $_POST['text'], 'category' => ( isset( $_POST['category'] ) ? (int) $_POST['category'] : 0 ), 'meta_title' => $_POST['meta_title'], 'meta_desc' => $_POST['meta_desc'] ) ) ) {
+if( isset( $_POST['name'] ) && isset( $_POST['text'] ) && isset( $_POST['meta_title'] ) && isset( $_POST['meta_desc'] ) ){
+    $connect = '|';
+    $connectids = array();
+    foreach($_POST['category'] as $index=>$val){
+        $v = intval($val);
+        if($v > 0){
+            $connect .= $v.'|';
+            $connectids[] = $v;
+        }
+    }
+    
+  if( actions::edit_category( $_GET['id'], array( 'name' => $_POST['name'], 'description' => $_POST['text'], 'connect' => $connect, 'meta_title' => $_POST['meta_title'], 'meta_desc' => $_POST['meta_desc'] ) ) ) {
 
+      $connectids_old = $info->connectids;
+      //remove these non-exist connections
+      foreach($connectids_old as $connectid){
+          if (!in_array($connectid, $connectids)){
+              $info2 = \query\main::category_infos( $connectid );
+              $connect = str_replace("|".$_GET['id']."|", "|", $info2->connect);
+              actions::edit_category( $connectid, array( 'connect' => $connect ) );
+          }
+      }
+      //add new connections
+      foreach($connectids as $connectid){
+          if (!in_array($connectid, $connectids_old)){
+              $info2 = \query\main::category_infos( $connectid );
+              if(!in_array(intval($_GET['id']), $info2->connectids)){
+              $connect = $info2->connect.$_GET['id']."|";
+              actions::edit_category( $connectid, array( 'connect' => $connect ) );
+              }
+          }
+      }
+      
   $info = \query\main::category_infos( $_GET['id'] );
 
-  echo '<div class="a-success">' . $LANG['msg_saved'] . '</div>';
+  echo '<div class="a-success">' . $LANG['msg_saved'] . '&nbsp;<input type="button" value="Back" onclick="history.go(-2);"></div>';
 
-  } else
+  } else{
   echo '<div class="a-error">' . $LANG['msg_error'] . '</div>';
+  }
+}
 
 }
 
 $_SESSION['categories_csrf'] = $csrf;
+$categories_while = \query\main::while_categories( array( 'max' => 0, 'show' => ($info->is_subcat?'cats':'subcats') ) );
 
-echo '<div class="form-table">
+echo '<script>
+var lastnum = '.count($info->connectids).';
+    function addSubcategory(){
+        lastnum++;
+        var categorysel = $("<select name=\"category["+lastnum+"]\"><option value=\"0\" selected>' . $LANG['no_category_select'] . '</option>';
+foreach( $categories_while as $cat )echo '<option value=\"' . $cat->ID . '\">' . $cat->name . '</option>';
+echo '</select>");
+        $("[name=div_category]").append(categorysel);
+    }
+
+</script><div class="form-table">
 
 <form action="#" method="POST">';
 
-echo '<div class="row"><span>' . $LANG['form_subcategoryfor'] . ':</span>
-<div><select name="category">';
-echo '<option value="0"' . ( $info->subcatID === 0 ? ' selected' : '' ) . '>' . $LANG['no_category_select'] . '</option>';
-foreach( \query\main::while_categories( array( 'max' => 0, 'show' => 'cats' ) ) as $cat )echo '<option value="' . $cat->ID . '"' . ( $info->subcatID === $cat->ID ? ' selected' : '' ) . '>' . $cat->name . '</option>';
-echo '</select></div></div>';
+    //var_dump($info);
+    
+    echo '<div class="row"><span>' . ($info->is_subcat?$LANG['form_subcategoryfor']:$LANG['form_subcategoryown']) . ':</span><div name="div_category"><input type="button" value="Add" onclick="addSubcategory();">';
+    
+    for($i=1; $i<=count($info->connectids); $i++){
+    
+echo '<select name="category['.$i.']"><option value="0">' . $LANG['no_category_select'] . '</option>';
+foreach( $categories_while as $cat )echo '<option value="' . $cat->ID . '"' . ( $info->connectids[$i-1] === $cat->ID ? ' selected' : '' ) . '>' . $cat->name . '</option>';
+echo '</select>';
 
-echo '<div class="row"><span>' . $LANG['form_name'] . ':</span><div><input type="text" name="name" value="' . $info->name . '" /></div></div>
+    }
+
+    echo '<select name="category[0]"><option value="0" selected>' . $LANG['no_category_select'] . '</option>';
+    foreach( $categories_while as $cat )echo '<option value="' . $cat->ID . '">' . $cat->name . '</option>';
+    echo '</select>';
+    
+echo '</div></div><div class="row"><span>' . $LANG['form_name'] . ':</span><div><input type="text" name="name" value="' . $info->name . '" /></div></div>
 
 <div class="row"><span>' . $LANG['form_description'] . ':</span><div><textarea name="text" style="min-height:100px;">' . $info->description . '</textarea></div></div>
 
@@ -284,7 +369,7 @@ foreach( \query\main::while_categories( array_merge( array( 'orderby' => (isset(
 
   echo '<li>
   <input type="checkbox" name="id[' . $item->ID . ']" />
-  <div class="info-div"><h2>' . $item->name . '</h2></div>';
+<div class="info-div"><h2>[' . ($item->is_subcat?'Sub':'Top') .']&nbsp;'. $item->name . '&nbsp;('.count($item->connectids).')</h2></div>';
 
   echo '<div class="options">';
   if( $ab_edt ) echo '<a href="?route=categories.php&amp;action=edit&amp;id=' . $item->ID . '">' . $LANG['edit'] . '</a>';

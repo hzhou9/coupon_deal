@@ -27,7 +27,7 @@ switch( $_GET['action'] ) {
 
 default:
 echo '<script>
-function dosync(){
+function dosync(full){
     var infotext = "Please do NOT close! Updating";
     var intervalR = setInterval(function(){
         infotext+=".";$("#popshop_sync_info").html(infotext);
@@ -37,6 +37,11 @@ function dosync(){
         $("#popshop_sync_ret").show();
     }));
     var url = location.href.replace("options.php","sync.php")+"&csrf='.$csrf.'";
+    if(full == 1){
+        url += "&auto=1&visible=1";
+    }else if(full == 2){
+        url += "&nosync=1&auto=1&visible=1";
+    }
     $("#popshop_sync_ret").attr("src", url);
 }
 function setCatID(id){
@@ -87,7 +92,7 @@ echo '<input type="hidden" name="csrf" value="' . $csrf . '" />
 <span>Sync with Popshop</span>
 </div>
 <div class="form-table">
-<div class="row"><span>Last Update: <span class="info"><span>Last Update Time</span></span></span><div>' . date("Y-m-d H:i:s", \query\main::get_option( 'popshop_lastupdate' ) ) . '&nbsp;<button class="btn" onclick="dosync()">Sync</button></div><div id="popshop_sync_info"></div></div>
+<div class="row"><span>Last Update: <span class="info"><span>Last Update Time</span></span></span><div>' . date("Y-m-d H:i:s", \query\main::get_option( 'popshop_lastupdate' ) ) . '&nbsp;<button class="btn" onclick="dosync()">Sync</button>&nbsp;<button class="btn" onclick="dosync(2)">AutoImport</button>&nbsp;<button class="btn" onclick="dosync(1)">Sync+AutoImport</button></div><div id="popshop_sync_info"></div></div>
 </div>
 <br><br><br>
 <div class="title">
@@ -96,19 +101,9 @@ echo '<input type="hidden" name="csrf" value="' . $csrf . '" />
 </div>';
 
 $mappingdata = \plugin\Popshop\inc\actions::listMerchantTypeMapping();
-$categories = \query\main::group_categories( array( 'max' => 0 ) );
-        
+$categories_while = \query\main::while_categories( array( 'max' => 0, 'show' => 'subcats' ) );
         echo '<select name="template_category" style="display:none;">';
-        foreach( $categories as $cat ) {
-            echo '<optgroup label="' . $cat['infos']->name . '">';
-            echo '<option value="' . $cat['infos']->ID . '">' . $cat['infos']->name . '</option>';
-            if( isset( $cat['subcats'] ) ) {
-                foreach( $cat['subcats'] as $subcat ) {
-                    echo '<option value="' . $subcat->ID . '">' . $subcat->name . '</option>';
-                }
-            }
-            echo '</optgroup>';
-        }
+        foreach( $categories_while as $cat )echo '<option value="' . $cat->ID . '">' . $cat->name . '</option>';
         echo '</select>';
         
 echo '
@@ -120,21 +115,10 @@ echo '
             $catname = 'N/A';
             $catid = 0;
             if($vm['catid'] && $vm['catid'] > 0){
-                foreach( $categories as $cat ) {
-                    if($cat['infos']->ID == $vm['catid']){
-                        $catname = $cat['infos']->name;
-                        $catid = $cat['infos']->ID;
-                        break;
-                    }
-                    if( isset( $cat['subcats'] ) ) {
-                        foreach( $cat['subcats'] as $subcat ) {
-                            if($subcat->ID == $vm['catid']){
-                                $catname = $subcat->name;
-                                $catid = $subcat->ID;
-                            }
-                        }
-                    }
-                    if($catid != 0){
+                foreach( $categories_while as $cat ){
+                    if($cat->ID == $vm['catid']){
+                        $catname = $cat->name;
+                        $catid = $cat->ID;
                         break;
                     }
                 }

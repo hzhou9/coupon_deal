@@ -119,6 +119,7 @@ case 'stores':
                 if( !$imported ) {
                     echo '<a href="javasript:void(0)" onclick="$(this).parents(\'li\').children(\'input\').click(); return false;">Check/Uncheck</a>';
                     echo '<a href="?plugin=Popshop/main.php&amp;action=store_preview&amp;store=' . ( $cdata = urlencode( json_encode( $item ) ) ) . '">Preview & Import</a>';
+                    echo '<a href="?plugin=Popshop/main.php&amp;action=store_bind&amp;store=' . ( $cdata = urlencode( json_encode( $item ) ) ) . '">Bind to Existing</a>';
                     echo '<input type="hidden" name="store['.$item['id'].']" value="' . $cdata . '" />';
                 }
                 echo '<a href="?plugin=Popshop/main.php&amp;action=coupons&amp;merchant=' . $item['id'] . '">View Deals</a>';
@@ -151,6 +152,76 @@ case 'stores':
    
     
     break;
+/** BIND STORE */
+case 'store_bind':
+        
+        echo '<div class="title">
+        
+        <h2>Bind to Existing Store</h2>
+        
+        <span>Here you can bind the Popshop merchant tp an existing store</span>
+        
+        </div>';
+        
+        if( isset( $_GET['store'] ) ) {
+            
+            $store = json_decode( urldecode( $_GET['store'] ), true );
+            
+            $id = $store['id'];
+            
+        } else {
+            $store = array();
+        }
+        
+        if( $store['storeID'] ) {
+            echo '<div class="a-error">Sorry, this store is already imported.</div>';
+        } else {
+            $searchname = isset( $_POST['search_name'] )?$_POST['search_name']:$store['name'];
+            $stores_choose = \plugin\Popshop\inc\actions::list_store_bind($searchname);
+            
+            if( $_SERVER['REQUEST_METHOD'] == 'POST' && isset( $_POST['csrf'] ) && check_csrf( $_POST['csrf'], 'cjapi_csrf' ) ) {
+                
+                if( isset( $_POST['choose_store'] ) && $_POST['choose_store'] != '') {
+                    
+                    $params = explode("|", $_POST['choose_store']);
+                    $ret = \plugin\Popshop\inc\actions::bind_store($params[0],$id,$params[1]);
+                    
+                    if( $ret > 0 ){
+                        echo '<div class="a-success">Added!</div><button class="btn" onclick="window.history.go(-2);">Back</button>';
+                        
+                        return;
+                    }
+                    else
+                        echo '<div class="a-error">Error!</div>';
+                    
+                }
+                
+            }
+            
+            $csrf = $_SESSION['cjapi_csrf'] = \site\utils::str_random(10);
+            
+            echo '<div class="form-table">
+            
+            <form action="#" method="POST" enctype="multipart/form-data" autocomplete="off">
+            <div class="row"><span>Name:</span><div><input name="search_name" type="text" value="'.$searchname.'"><button class="btn">Search</button></div></div>
+            <div class="row"><span>Select:</span>
+            <div><select name="choose_store">';
+            echo '<option value=""'.( (isset( $_POST['choose_store'] ) && $_POST['choose_store'] != '0' )?'':' selected' ).'>N/A</option>';
+            foreach($stores_choose as $data){
+                echo '<option value="' . $data['id'] .'|' . $data['popshopID'] . '"'. ( (isset( $_POST['choose_store'] ) && $_POST['choose_store'] == $data['id'] )?' selected':'' ) .'>' . $data['name'] . '</option>';
+            }
+            echo '</select></div></div>
+                    
+                    <input type="hidden" name="csrf" value="' . $csrf . '" />
+                    <button class="btn">Import</button>
+                    
+                    </form>
+                    
+                    </div>';
+                    
+        }
+        
+        break;
 /** PREVIEW STORE */
 case 'store_preview':
         

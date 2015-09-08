@@ -114,3 +114,11 @@ define('MONEY_THOUSAND_SEPARATOR', ',');
 /** DO NOT MODIFY THIS !! */
 
 define('DIR', __DIR__);
+
+    function nltobr($str){
+        if(strpos($str, "<br>") === false){
+            return nl2br($str);
+        }else{
+            return $str;
+        }
+    }

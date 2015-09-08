@@ -352,14 +352,23 @@ global $db, $GET;
 $id = empty( $id ) ? $GET['id'] : $id;
 
   $stmt = $db->stmt_init();
-  $stmt->prepare("SELECT id, subcategory, user, (SELECT name FROM " . DB_TABLE_PREFIX . "users WHERE id = c.user), name, description, (SELECT COUNT(*) FROM " . DB_TABLE_PREFIX . "stores WHERE category = c.id), meta_title, meta_desc, date FROM " . DB_TABLE_PREFIX . "categories c WHERE id = ?");
+  $stmt->prepare("SELECT id, istop, connect, user, (SELECT name FROM " . DB_TABLE_PREFIX . "users WHERE id = c.user), name, description, (SELECT COUNT(*) FROM " . DB_TABLE_PREFIX . "stores WHERE category = c.id), meta_title, meta_desc, date FROM " . DB_TABLE_PREFIX . "categories c WHERE id = ?");
   $stmt->bind_param( "i", $id );
   $stmt->execute();
-  $stmt->bind_result( $id, $subcategory, $user, $user_name, $name, $description, $stores, $meta_title, $meta_desc, $date );
+  $stmt->bind_result( $id, $istop, $connect, $user, $user_name, $name, $description, $stores, $meta_title, $meta_desc, $date );
   $stmt->fetch();
   $stmt->close();
+    
+  $connect_arr = explode("|", $connect);
+    $connectids = array();
+    foreach($connect_arr as $value){
+        $v = intval($value);
+        if($v > 0){
+            $connectids[] = $v;
+        }
+    }
 
-  return (object)array( 'ID' => $id, 'subcatID' => $subcategory, 'user' => $user, 'user_name' => htmlspecialchars( $user_name ), 'name' => htmlspecialchars( $name ), 'description' => htmlspecialchars( $description ), 'stores' => $stores, 'meta_title' => htmlspecialchars( $meta_title ), 'meta_description' => htmlspecialchars( $meta_desc ), 'date' => $date, 'is_subcat' => ( $subcategory !== 0 ? true : false ), 'link' => ( defined( 'SEO_LINKS' ) && SEO_LINKS ? \site\utils::make_seo_link( \query\main::get_option( 'seo_link_category' ), $name, $id ) : $GLOBALS['siteURL'] . '?cat=' . $id ) );
+  return (object)array( 'ID' => $id, 'connect'=> $connect, 'connectids' => $connectids, 'user' => $user, 'user_name' => htmlspecialchars( $user_name ), 'name' => htmlspecialchars( $name ), 'description' => htmlspecialchars( $description ), 'stores' => $stores, 'meta_title' => htmlspecialchars( $meta_title ), 'meta_description' => htmlspecialchars( $meta_desc ), 'date' => $date, 'is_subcat' => ( $istop == 0 ? true : false ), 'link' => ( defined( 'SEO_LINKS' ) && SEO_LINKS ? \site\utils::make_seo_link( \query\main::get_option( 'seo_link_category' ), $name, $id ) : $GLOBALS['siteURL'] . '?cat=' . $id ) );
 
 }
 
@@ -679,7 +688,7 @@ $id = empty( $id ) ? $GET['id'] : $id;
   $stmt->fetch();
   $stmt->close();
 
-  return (object) array( 'ID' => $id, 'feedID' => $feed_id, 'userID' => $user, 'storeID' => $store, 'catID' => $cat, 'user_name' => htmlspecialchars( $user_name ), 'code' => htmlspecialchars( $code ), 'title' => htmlspecialchars( $title ), 'original_url' => $link, 'url' => ( filter_var( $link, FILTER_VALIDATE_URL ) ? htmlspecialchars( $link ) : htmlspecialchars( $store_link ) ), 'description' => htmlspecialchars( $description ), 'tags' => htmlspecialchars( $tags ), 'visible' => $visible, 'views' => $views, 'start_date' => $start, 'is_coupon' => ( !empty( $code ) ? true : false ), 'is_deal' => ( empty( $code ) ? true: false ), 'is_running' => ( strtotime( $start ) < time() && strtotime( $expiration ) > time() ? true : false ), 'expiration_date' => $expiration, 'cashback' => $cashback, 'meta_title' => htmlspecialchars( $meta_title ), 'meta_description' => htmlspecialchars( $meta_desc ), 'lastupdate_by' => $lastupdate_by, 'lastupdate_by_name' => htmlspecialchars( $lastupdate_by_name ), 'last_update' => $last_update, 'is_started' => ( strtotime( $start ) > time() ? false : true ), 'is_expired' => ( strtotime( $expiration ) > time() ? false : true ), 'is_popular' => (boolean) $popular, 'is_exclusive' => (boolean) $exclusive, 'paid_until' => $paid_until, 'date' => $date, 'store_img' => htmlspecialchars( $store_img ), 'storeID' => $store, 'store_catID' => $store_cat, 'store_name' => htmlspecialchars( $store_name ), 'store_url' => htmlspecialchars( $store_link ), 'reviews' => $reviews, 'stars' => $stars, 'link' => ( $seo_link ? \site\utils::make_seo_link( \query\main::get_option( 'seo_link_coupon' ), $title, $id ) : $GLOBALS['siteURL'] . '?id=' . $id ), 'store_link' => ( $seo_link ? \site\utils::make_seo_link( \query\main::get_option( 'seo_link_store' ), $store_name, $store ) : $GLOBALS['siteURL'] . '?store=' . $store ), 'store_reviews_link' => ( $seo_link ? \site\utils::make_seo_link( \query\main::get_option( 'seo_link_reviews' ), $store_name, $store ) : $GLOBALS['siteURL'] . '?reviews=' . $store ) );
+  return (object) array( 'ID' => $id, 'feedID' => $feed_id, 'userID' => $user, 'storeID' => $store, 'catID' => $cat, 'user_name' => htmlspecialchars( $user_name ), 'code' => htmlspecialchars( $code ), 'title' => htmlspecialchars( $title ), 'original_url' => $link, 'url' => ( filter_var( $link, FILTER_VALIDATE_URL ) ? htmlspecialchars( $link ) : htmlspecialchars( $store_link ) ), 'description' => $description, 'tags' => htmlspecialchars( $tags ), 'visible' => $visible, 'views' => $views, 'start_date' => $start, 'is_coupon' => ( !empty( $code ) ? true : false ), 'is_deal' => ( empty( $code ) ? true: false ), 'is_running' => ( strtotime( $start ) < time() && strtotime( $expiration ) > time() ? true : false ), 'expiration_date' => $expiration, 'cashback' => $cashback, 'meta_title' => htmlspecialchars( $meta_title ), 'meta_description' => htmlspecialchars( $meta_desc ), 'lastupdate_by' => $lastupdate_by, 'lastupdate_by_name' => htmlspecialchars( $lastupdate_by_name ), 'last_update' => $last_update, 'is_started' => ( strtotime( $start ) > time() ? false : true ), 'is_expired' => ( strtotime( $expiration ) > time() ? false : true ), 'is_popular' => (boolean) $popular, 'is_exclusive' => (boolean) $exclusive, 'paid_until' => $paid_until, 'date' => $date, 'store_img' => htmlspecialchars( $store_img ), 'storeID' => $store, 'store_catID' => $store_cat, 'store_name' => htmlspecialchars( $store_name ), 'store_url' => htmlspecialchars( $store_link ), 'reviews' => $reviews, 'stars' => $stars, 'link' => ( $seo_link ? \site\utils::make_seo_link( \query\main::get_option( 'seo_link_coupon' ), $title, $id ) : $GLOBALS['siteURL'] . '?id=' . $id ), 'store_link' => ( $seo_link ? \site\utils::make_seo_link( \query\main::get_option( 'seo_link_store' ), $store_name, $store ) : $GLOBALS['siteURL'] . '?store=' . $store ), 'store_reviews_link' => ( $seo_link ? \site\utils::make_seo_link( \query\main::get_option( 'seo_link_reviews' ), $store_name, $store ) : $GLOBALS['siteURL'] . '?reviews=' . $store ) );
 
 }
 
@@ -747,7 +756,7 @@ $id = empty( $id ) ? $GET['id'] : $id;
   $stmt->fetch();
   $stmt->close();
 
-  return (object) array( 'ID' => $id, 'feedID' => $feed_id, 'userID' => $user, 'storeID' => $store, 'catID' => $cat, 'user_name' => htmlspecialchars( $user_name ), 'title' => htmlspecialchars( $title ), 'original_url' => $link, 'url' => ( filter_var( $link, FILTER_VALIDATE_URL ) ? htmlspecialchars( $link ) : htmlspecialchars( $store_link ) ), 'description' => htmlspecialchars( $description ), 'tags' => htmlspecialchars( $tags ), 'image' => htmlspecialchars( $image ), 'price' => $price, 'old_price' => $old_price, 'currency' => htmlspecialchars( $currency ), 'visible' => $visible, 'views' => $views, 'start_date' => $start, 'is_running' => ( strtotime( $expiration ) > time() ? true : false ), 'expiration_date' => $expiration, 'cashback' => $cashback, 'meta_title' => htmlspecialchars( $meta_title ), 'meta_description' => htmlspecialchars( $meta_desc ), 'lastupdate_by' => $lastupdate_by, 'lastupdate_by_name' => htmlspecialchars( $lastupdate_by_name ), 'last_update' => $last_update, 'is_expired' => ( strtotime( $expiration ) > time() ? false : true ), 'is_popular' => (boolean) $popular, 'paid_until' => $paid_until, 'date' => $date, 'store_img' => htmlspecialchars( $store_img ), 'storeID' => $store_id, 'store_catID' => $store_cat, 'store_name' => htmlspecialchars( $store_name ), 'store_url' => htmlspecialchars( $store_link ), 'reviews' => $reviews, 'stars' => $stars, 'link' => ( $seo_link ? \site\utils::make_seo_link( \query\main::get_option( 'seo_link_product' ), $title, $id ) : $GLOBALS['siteURL'] . '?product=' . $id ), 'store_link' => ( $seo_link ? \site\utils::make_seo_link( \query\main::get_option( 'seo_link_store' ), $store_name, $store_id ) : $GLOBALS['siteURL'] . '?store=' . $store_id ), 'store_reviews_link' => ( $seo_link ? \site\utils::make_seo_link( \query\main::get_option( 'seo_link_reviews' ), $store_name, $store_id ) : $GLOBALS['siteURL'] . '?reviews=' . $store_id ) );
+  return (object) array( 'ID' => $id, 'feedID' => $feed_id, 'userID' => $user, 'storeID' => $store, 'catID' => $cat, 'user_name' => htmlspecialchars( $user_name ), 'title' => htmlspecialchars( $title ), 'original_url' => $link, 'url' => ( filter_var( $link, FILTER_VALIDATE_URL ) ? htmlspecialchars( $link ) : htmlspecialchars( $store_link ) ), 'description' => $description, 'tags' => htmlspecialchars( $tags ), 'image' => htmlspecialchars( $image ), 'price' => $price, 'old_price' => $old_price, 'currency' => htmlspecialchars( $currency ), 'visible' => $visible, 'views' => $views, 'start_date' => $start, 'is_running' => ( strtotime( $expiration ) > time() ? true : false ), 'expiration_date' => $expiration, 'cashback' => $cashback, 'meta_title' => htmlspecialchars( $meta_title ), 'meta_description' => htmlspecialchars( $meta_desc ), 'lastupdate_by' => $lastupdate_by, 'lastupdate_by_name' => htmlspecialchars( $lastupdate_by_name ), 'last_update' => $last_update, 'is_expired' => ( strtotime( $expiration ) > time() ? false : true ), 'is_popular' => (boolean) $popular, 'paid_until' => $paid_until, 'date' => $date, 'store_img' => htmlspecialchars( $store_img ), 'storeID' => $store_id, 'store_catID' => $store_cat, 'store_name' => htmlspecialchars( $store_name ), 'store_url' => htmlspecialchars( $store_link ), 'reviews' => $reviews, 'stars' => $stars, 'link' => ( $seo_link ? \site\utils::make_seo_link( \query\main::get_option( 'seo_link_product' ), $title, $id ) : $GLOBALS['siteURL'] . '?product=' . $id ), 'store_link' => ( $seo_link ? \site\utils::make_seo_link( \query\main::get_option( 'seo_link_store' ), $store_name, $store_id ) : $GLOBALS['siteURL'] . '?store=' . $store_id ), 'store_reviews_link' => ( $seo_link ? \site\utils::make_seo_link( \query\main::get_option( 'seo_link_reviews' ), $store_name, $store_id ) : $GLOBALS['siteURL'] . '?reviews=' . $store_id ) );
 
 }
 
@@ -815,7 +824,7 @@ $id = empty( $id ) ? $GET['id'] : $id;
   $stmt->fetch();
   $stmt->close();
 
-  return (object) array( 'ID' => $id, 'feedID' => $feed_id, 'userID' => $user, 'user_name' => htmlspecialchars( $user_name ), 'catID' => $cat, 'name' => htmlspecialchars( $name ), 'url' => htmlspecialchars( $link ), 'description' => htmlspecialchars( $description ), 'tags' => htmlspecialchars( $tags ), 'image' => htmlspecialchars( $image ), 'visible' => $visible, 'views' => $views, 'coupons' => $coupons, 'date' => $date, 'reviews' => $reviews, 'stars' => $stars, 'products' => $products, 'meta_title' => htmlspecialchars( $meta_title ), 'meta_description' => htmlspecialchars( $meta_desc ), 'lastupdate_by' => $lastupdate_by, 'lastupdate_by_name' => htmlspecialchars( $lastupdate_by_name ), 'last_update' => $last_update, 'is_popular' => (boolean) $popular, 'link' => ( $seo_link ? \site\utils::make_seo_link( \query\main::get_option( 'seo_link_store' ), $name, $id ) : $GLOBALS['siteURL'] . '?store=' . $id ), 'reviews_link' => ( $seo_link ? \site\utils::make_seo_link( \query\main::get_option( 'seo_link_reviews' ), $name, $id ) : $GLOBALS['siteURL'] . '?reviews=' . $id ) );
+  return (object) array( 'ID' => $id, 'feedID' => $feed_id, 'userID' => $user, 'user_name' => htmlspecialchars( $user_name ), 'catID' => $cat, 'name' => htmlspecialchars( $name ), 'url' => htmlspecialchars( $link ), 'description' => $description, 'tags' => htmlspecialchars( $tags ), 'image' => htmlspecialchars( $image ), 'visible' => $visible, 'views' => $views, 'coupons' => $coupons, 'date' => $date, 'reviews' => $reviews, 'stars' => $stars, 'products' => $products, 'meta_title' => htmlspecialchars( $meta_title ), 'meta_description' => htmlspecialchars( $meta_desc ), 'lastupdate_by' => $lastupdate_by, 'lastupdate_by_name' => htmlspecialchars( $lastupdate_by_name ), 'last_update' => $last_update, 'is_popular' => (boolean) $popular, 'link' => ( $seo_link ? \site\utils::make_seo_link( \query\main::get_option( 'seo_link_store' ), $name, $id ) : $GLOBALS['siteURL'] . '?store=' . $id ), 'reviews_link' => ( $seo_link ? \site\utils::make_seo_link( \query\main::get_option( 'seo_link_reviews' ), $name, $id ) : $GLOBALS['siteURL'] . '?reviews=' . $id ) );
 
 }
 
@@ -979,8 +988,8 @@ global $db;
   $show = array_map( 'trim', explode( ',', strtolower( $categories['show'] ) ) );
   foreach( $show as $v ) {
     switch( $v ) {
-      case 'cats': $where[] = 'subcategory = 0'; break;
-      case 'subcats':  $where[] = 'subcategory > 0'; break;
+      case 'cats': $where[] = 'istop > 0'; break;
+      case 'subcats':  $where[] = 'istop = 0'; break;
     }
   }
   }
@@ -1070,8 +1079,8 @@ global $db;
   $show = array_map( 'trim', explode( ',', strtolower( $categories['show'] ) ) );
   foreach( $show as $v ) {
     switch( $v ) {
-      case 'cats': $where[] = 'c.subcategory = 0'; break;
-      case 'subcats':  $where[] = 'c.subcategory > 0'; break;
+      case 'cats': $where[] = 'c.istop > 0'; break;
+      case 'subcats':  $where[] = 'c.istop = 0'; break;
     }
   }
   }
@@ -1081,13 +1090,21 @@ global $db;
   */
 
   $stmt = $db->stmt_init();
-  $stmt->prepare( "SELECT c.id, c.subcategory, c.user, c.name, c.description, c.date, (SELECT COUNT(*) FROM " . DB_TABLE_PREFIX . "stores WHERE category = c.id) FROM " . DB_TABLE_PREFIX . "categories c" . ( empty( $where ) ? '' : ' WHERE ' . implode( ' AND ', $where ) ) . ( empty( $orderby ) ? '' : ' ORDER BY ' . implode( ', ', array_filter( $orderby ) ) ) . ( empty( $limit ) ? '' : ' LIMIT ' . implode( ',', $limit ) ) );
+  $stmt->prepare( "SELECT c.id, c.istop, c.connect, c.user, c.name, c.description, c.date, (SELECT COUNT(*) FROM " . DB_TABLE_PREFIX . "stores WHERE category = c.id) FROM " . DB_TABLE_PREFIX . "categories c" . ( empty( $where ) ? '' : ' WHERE ' . implode( ' AND ', $where ) ) . ( empty( $orderby ) ? '' : ' ORDER BY ' . implode( ', ', array_filter( $orderby ) ) ) . ( empty( $limit ) ? '' : ' LIMIT ' . implode( ',', $limit ) ) );
   $stmt->execute();
-  $stmt->bind_result( $id, $subcategory, $user, $name, $description, $date, $stores );
+  $stmt->bind_result( $id, $istop, $connect, $user, $name, $description, $date, $stores );
 
   $data = array();
   while( $stmt->fetch() ) {
-    $data[] = (object) array( 'ID' => $id, 'subcatID' => $subcategory, 'user' => $user, 'name' => htmlspecialchars( $name ), 'description' => htmlspecialchars( $description ), 'date' => $date, 'stores' => $stores, 'is_subcat' => ( $subcategory !== 0 ? true : false ), 'link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_category, $name, $id ) : $GLOBALS['siteURL'] . '?cat=' . $id ) );
+      $connect_arr = explode("|", $connect);
+      $connectids = array();
+      foreach($connect_arr as $value){
+          $v = intval($value);
+          if($v > 0){
+              $connectids[] = $v;
+          }
+      }
+    $data[] = (object) array( 'ID' => $id, 'connect'=>$connect, 'connectids' => $connectids, 'user' => $user, 'name' => htmlspecialchars( $name ), 'description' => htmlspecialchars( $description ), 'date' => $date, 'stores' => $stores, 'is_subcat' => ( $istop == 0 ? true : false ), 'link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_category, $name, $id ) : $GLOBALS['siteURL'] . '?cat=' . $id ) );
   }
 
   $stmt->close();
@@ -1107,7 +1124,9 @@ public static function group_categories( $category = array() ) {
   $array = array();
   foreach( \query\main::while_categories( $category ) as $c ) {
     if( $c->is_subcat ) {
-    $array['cat_' . $c->subcatID]['subcats'][] = $c;
+        foreach($c->connectids as $connectid){
+            $array['cat_' . $connectid]['subcats'][] = $c;
+        }
     } else {
     $array['cat_' . $c->ID]['infos'] = $c;
     }
@@ -1530,14 +1549,22 @@ global $db, $GET;
   case 'category':
 
   $stmt = $db->stmt_init();
-  $stmt->prepare( "SELECT id FROM " . DB_TABLE_PREFIX . "categories WHERE subcategory = ?" );
+  $stmt->prepare( "SELECT istop,connect FROM " . DB_TABLE_PREFIX . "categories WHERE id = ?" );
   $stmt->bind_param( "i", $GET['id'] );
   $stmt->execute();
-  $stmt->bind_result( $id );
+  $stmt->bind_result( $istop,$connect );
 
   $ids[] = (int) $GET['id'];
-  while( $stmt->fetch() ) {
-    $ids[] = $id;
+  if( $stmt->fetch() ) {
+      if($istop > 0){
+          $connect_arr = explode("|", $connect);
+          foreach($connect_arr as $value){
+              $v = intval($value);
+              if($v > 0){
+                  $ids[] = $v;
+              }
+          }
+      }
   }
 
   $stmt->prepare("SELECT COUNT(*) FROM " . DB_TABLE_PREFIX . "coupons c LEFT JOIN " . DB_TABLE_PREFIX . "stores s ON (c.store = s.id) WHERE c.category IN(" . implode( ',', $ids ) . ") AND c.visible > 0 AND s.visible > 0");
@@ -1746,15 +1773,23 @@ global $db, $GET;
   case 'category':
 
   $stmt = $db->stmt_init();
-  $stmt->prepare( "SELECT id FROM " . DB_TABLE_PREFIX . "categories WHERE subcategory = ?" );
+  $stmt->prepare( "SELECT istop,connect FROM " . DB_TABLE_PREFIX . "categories WHERE id = ?" );
   $stmt->bind_param( "i", $GET['id'] );
   $stmt->execute();
-  $stmt->bind_result( $id );
+  $stmt->bind_result( $istop,$connect );
 
   $ids[] = (int) $GET['id'];
-  while( $stmt->fetch() ) {
-    $ids[] = $id;
-  }
+          if( $stmt->fetch() ) {
+              if($istop > 0){
+                  $connect_arr = explode("|", $connect);
+                  foreach($connect_arr as $value){
+                      $v = intval($value);
+                      if($v > 0){
+                          $ids[] = $v;
+                      }
+                  }
+              }
+          }
 
   $stmt->prepare( "SELECT c.id, c.feedID, c.user, c.store, c.category, c.title, c.link, c.description, c.tags, c.code, c.visible, c.views, c.start, c.expiration, c.cashback, c.paid_until, c.date, (SELECT COUNT(*) FROM " . DB_TABLE_PREFIX . "reviews WHERE store = s.id AND valid > 0) as votes, (SELECT AVG(stars) FROM " . DB_TABLE_PREFIX . "reviews WHERE store = s.id AND valid > 0) as rating, s.image, s.name, s.link, s.category FROM " . DB_TABLE_PREFIX . "coupons c LEFT JOIN " . DB_TABLE_PREFIX . "stores s ON (s.id = c.store) WHERE c.category IN(" . implode( ',', $ids ) . ") AND c.visible > 0 AND s.visible > 0" . ( empty( $where ) ? '' : implode( ' AND ', array_filter( $where ) ) ) . ( empty( $orderby ) ? '' : ' ORDER BY ' . implode( ', ', array_filter( $orderby ) ) ) . ( empty( $limit ) ? '' : ' LIMIT ' . implode( ',', $limit ) ) );
   $stmt->execute();
@@ -1762,7 +1797,7 @@ global $db, $GET;
 
   $data = array();
   while( $stmt->fetch() ) {
-    $data[] = (object) array( 'ID' => $id, 'feedID' => $feed_id, 'userID' => $user, 'storeID' => $store, 'catID' => $cat, 'code' => htmlspecialchars( $code ), 'title' => htmlspecialchars( $title ), 'url' => ( filter_var( $link, FILTER_VALIDATE_URL ) ? htmlspecialchars( $link ) : htmlspecialchars( $store_link ) ), 'description' => htmlspecialchars( $description ), 'tags' => htmlspecialchars( $tags ), 'visible' => $visible, 'views' => $views, 'start_date' => $start, 'is_coupon' => ( !empty( $code ) ? true: false ), 'is_deal' => ( empty( $code ) ? true: false ), 'is_running' => ( strtotime( $start ) > time() && strtotime( $expiration ) > time() ? true : false ), 'expiration_date' => $expiration, 'cashback' => $cashback, 'is_started' => ( strtotime( $start ) > time() ? false : true ), 'is_expired' => ( strtotime( $expiration ) > time() ? false : true ), 'paid_until' => $paid_until, 'date' => $date, 'reviews' => $reviews, 'stars' => $stars, 'store_img' => htmlspecialchars( $store_img ), 'store_catID' => $store_cat, 'store_name' => htmlspecialchars( $store_name ), 'store_url' => htmlspecialchars( $store_link ), 'link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_coupon, $title, $id ) : $GLOBALS['siteURL'] . '?id=' . $id ), 'store_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_store, $store_name, $store ) : $GLOBALS['siteURL'] . '?store=' . $store ), 'store_reviews_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_reviews, $store_name, $store ) : $GLOBALS['siteURL'] . '?reviews=' . $store ) );
+    $data[] = (object) array( 'ID' => $id, 'feedID' => $feed_id, 'userID' => $user, 'storeID' => $store, 'catID' => $cat, 'code' => htmlspecialchars( $code ), 'title' => htmlspecialchars( $title ), 'url' => ( filter_var( $link, FILTER_VALIDATE_URL ) ? htmlspecialchars( $link ) : htmlspecialchars( $store_link ) ), 'description' => $description, 'tags' => htmlspecialchars( $tags ), 'visible' => $visible, 'views' => $views, 'start_date' => $start, 'is_coupon' => ( !empty( $code ) ? true: false ), 'is_deal' => ( empty( $code ) ? true: false ), 'is_running' => ( strtotime( $start ) > time() && strtotime( $expiration ) > time() ? true : false ), 'expiration_date' => $expiration, 'cashback' => $cashback, 'is_started' => ( strtotime( $start ) > time() ? false : true ), 'is_expired' => ( strtotime( $expiration ) > time() ? false : true ), 'paid_until' => $paid_until, 'date' => $date, 'reviews' => $reviews, 'stars' => $stars, 'store_img' => htmlspecialchars( $store_img ), 'store_catID' => $store_cat, 'store_name' => htmlspecialchars( $store_name ), 'store_url' => htmlspecialchars( $store_link ), 'link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_coupon, $title, $id ) : $GLOBALS['siteURL'] . '?id=' . $id ), 'store_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_store, $store_name, $store ) : $GLOBALS['siteURL'] . '?store=' . $store ), 'store_reviews_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_reviews, $store_name, $store ) : $GLOBALS['siteURL'] . '?reviews=' . $store ) );
   }
 
   $stmt->close();
@@ -1789,7 +1824,7 @@ global $db, $GET;
 
   $data = array();
   while( $stmt->fetch() ) {
-    $data[] = (object) array( 'ID' => $id, 'feedID' => $feed_id, 'userID' => $user, 'storeID' => $store, 'catID' => $cat, 'code' => htmlspecialchars( $code ), 'title' => htmlspecialchars( $title ), 'url' => ( filter_var( $link, FILTER_VALIDATE_URL ) ? htmlspecialchars( $link ) : htmlspecialchars( $store_link ) ), 'description' => htmlspecialchars( $description ), 'tags' => htmlspecialchars( $tags ), 'visible' => $visible, 'views' => $views, 'start_date' => $start, 'is_coupon' => ( !empty( $code ) ? true : false ), 'is_deal' => ( empty( $code ) ? true : false ), 'is_running' => ( strtotime( $start ) < time() && strtotime( $expiration ) > time() ? true : false ), 'expiration_date' => $expiration, 'cashback' => $cashback, 'is_started' => ( strtotime( $start ) > time() ? false : true ), 'is_expired' => ( strtotime( $expiration ) > time() ? false : true ), 'paid_until' => $paid_until, 'date' => $date, 'reviews' => $reviews, 'stars' => $stars, 'store_img' => htmlspecialchars( $store_img ), 'store_catID' => $store_cat, 'store_name' => htmlspecialchars( $store_name ), 'store_url' => htmlspecialchars( $store_link ), 'link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_coupon, $title, $id ) : $GLOBALS['siteURL'] . '?id=' . $id ), 'store_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_store, $store_name, $store ) : $GLOBALS['siteURL'] . '?store=' . $store ), 'store_reviews_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_reviews, $store_name, $store ) : $GLOBALS['siteURL'] . '?reviews=' . $store ) );
+    $data[] = (object) array( 'ID' => $id, 'feedID' => $feed_id, 'userID' => $user, 'storeID' => $store, 'catID' => $cat, 'code' => htmlspecialchars( $code ), 'title' => htmlspecialchars( $title ), 'url' => ( filter_var( $link, FILTER_VALIDATE_URL ) ? htmlspecialchars( $link ) : htmlspecialchars( $store_link ) ), 'description' => $description, 'tags' => htmlspecialchars( $tags ), 'visible' => $visible, 'views' => $views, 'start_date' => $start, 'is_coupon' => ( !empty( $code ) ? true : false ), 'is_deal' => ( empty( $code ) ? true : false ), 'is_running' => ( strtotime( $start ) < time() && strtotime( $expiration ) > time() ? true : false ), 'expiration_date' => $expiration, 'cashback' => $cashback, 'is_started' => ( strtotime( $start ) > time() ? false : true ), 'is_expired' => ( strtotime( $expiration ) > time() ? false : true ), 'paid_until' => $paid_until, 'date' => $date, 'reviews' => $reviews, 'stars' => $stars, 'store_img' => htmlspecialchars( $store_img ), 'store_catID' => $store_cat, 'store_name' => htmlspecialchars( $store_name ), 'store_url' => htmlspecialchars( $store_link ), 'link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_coupon, $title, $id ) : $GLOBALS['siteURL'] . '?id=' . $id ), 'store_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_store, $store_name, $store ) : $GLOBALS['siteURL'] . '?store=' . $store ), 'store_reviews_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_reviews, $store_name, $store ) : $GLOBALS['siteURL'] . '?reviews=' . $store ) );
   }
 
   $stmt->close();
@@ -1872,7 +1907,7 @@ global $db, $GET;
 
   $data = array();
   while( $stmt->fetch() ) {
-    $data[] = (object) array( 'ID' => $id, 'feedID' => $feed_id, 'userID' => $user, 'storeID' => $store, 'catID' => $cat, 'code' => htmlspecialchars( $code ), 'title' => htmlspecialchars( $title ), 'url' => ( filter_var( $link, FILTER_VALIDATE_URL ) ? htmlspecialchars( $link ) : htmlspecialchars( $store_link ) ), 'description' => htmlspecialchars( $description ), 'tags' => htmlspecialchars( $tags ), 'visible' => $visible, 'views' => $views, 'start_date' => $start, 'is_coupon' => ( !empty( $code ) ? true: false ), 'is_deal' => ( empty( $code ) ? true : false ), 'is_running' => ( strtotime( $start ) < time() && strtotime( $expiration ) > time() ? true : false ), 'expiration_date' => $expiration, 'cashback' => $cashback, 'is_started' => ( strtotime( $start ) > time() ? false : true ), 'is_expired' => ( strtotime( $expiration ) > time() ? false : true ), 'paid_until' => $paid_until, 'date' => $date, 'reviews' => $reviews, 'stars' => $stars, 'store_img' => htmlspecialchars( $store_img ), 'store_catID' => $store_cat, 'store_name' => htmlspecialchars( $store_name ), 'store_url' => htmlspecialchars( $store_link ), 'link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_coupon, $title, $id ) : $GLOBALS['siteURL'] . '?id=' . $id ), 'store_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_store, $store_name, $store ) : $GLOBALS['siteURL'] . '?store=' . $store ), 'store_reviews_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_reviews, $store_name, $store ) : $GLOBALS['siteURL'] . '?reviews=' . $store ) );
+    $data[] = (object) array( 'ID' => $id, 'feedID' => $feed_id, 'userID' => $user, 'storeID' => $store, 'catID' => $cat, 'code' => htmlspecialchars( $code ), 'title' => htmlspecialchars( $title ), 'url' => ( filter_var( $link, FILTER_VALIDATE_URL ) ? htmlspecialchars( $link ) : htmlspecialchars( $store_link ) ), 'description' => $description, 'tags' => htmlspecialchars( $tags ), 'visible' => $visible, 'views' => $views, 'start_date' => $start, 'is_coupon' => ( !empty( $code ) ? true: false ), 'is_deal' => ( empty( $code ) ? true : false ), 'is_running' => ( strtotime( $start ) < time() && strtotime( $expiration ) > time() ? true : false ), 'expiration_date' => $expiration, 'cashback' => $cashback, 'is_started' => ( strtotime( $start ) > time() ? false : true ), 'is_expired' => ( strtotime( $expiration ) > time() ? false : true ), 'paid_until' => $paid_until, 'date' => $date, 'reviews' => $reviews, 'stars' => $stars, 'store_img' => htmlspecialchars( $store_img ), 'store_catID' => $store_cat, 'store_name' => htmlspecialchars( $store_name ), 'store_url' => htmlspecialchars( $store_link ), 'link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_coupon, $title, $id ) : $GLOBALS['siteURL'] . '?id=' . $id ), 'store_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_store, $store_name, $store ) : $GLOBALS['siteURL'] . '?store=' . $store ), 'store_reviews_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_reviews, $store_name, $store ) : $GLOBALS['siteURL'] . '?reviews=' . $store ) );
   }
 
   $stmt->close();
@@ -1930,15 +1965,23 @@ global $db, $GET;
   case 'category':
 
   $stmt = $db->stmt_init();
-  $stmt->prepare( "SELECT id FROM " . DB_TABLE_PREFIX . "categories WHERE subcategory = ?" );
+  $stmt->prepare( "SELECT istop,connect FROM " . DB_TABLE_PREFIX . "categories WHERE id = ?" );
   $stmt->bind_param( "i", $GET['id'] );
   $stmt->execute();
-  $stmt->bind_result( $id );
+  $stmt->bind_result( $istop,$connect );
 
   $ids[] = (int) $GET['id'];
-  while( $stmt->fetch() ) {
-    $ids[] = $id;
-  }
+          if( $stmt->fetch() ) {
+              if($istop > 0){
+                  $connect_arr = explode("|", $connect);
+                  foreach($connect_arr as $value){
+                      $v = intval($value);
+                      if($v > 0){
+                          $ids[] = $v;
+                      }
+                  }
+              }
+          }
 
   $stmt->prepare("SELECT COUNT(*) FROM " . DB_TABLE_PREFIX . "products p LEFT JOIN " . DB_TABLE_PREFIX . "stores s ON (p.store = s.id) WHERE p.category IN(" . implode( ',', $ids ) . ") AND p.visible > 0 AND s.visible > 0");
   $stmt->execute();
@@ -2146,15 +2189,23 @@ global $db, $GET;
   case 'category':
 
   $stmt = $db->stmt_init();
-  $stmt->prepare( "SELECT id FROM " . DB_TABLE_PREFIX . "categories WHERE subcategory = ?" );
+  $stmt->prepare( "SELECT istop,connect FROM " . DB_TABLE_PREFIX . "categories WHERE id = ?" );
   $stmt->bind_param( "i", $GET['id'] );
   $stmt->execute();
-  $stmt->bind_result( $id );
+  $stmt->bind_result( $istop,$connect );
 
   $ids[] = (int) $GET['id'];
-  while( $stmt->fetch() ) {
-    $ids[] = $id;
-  }
+          if( $stmt->fetch() ) {
+              if($istop > 0){
+                  $connect_arr = explode("|", $connect);
+                  foreach($connect_arr as $value){
+                      $v = intval($value);
+                      if($v > 0){
+                          $ids[] = $v;
+                      }
+                  }
+              }
+          }
 
   $stmt->prepare( "SELECT p.id, p.feedID, p.user, p.store, p.category, p.popular, p.title, p.link, p.description, p.tags, p.image, p.price, p.old_price, p.currency, p.visible, p.views, p.start, p.expiration, p.cashback, p.paid_until, p.date, (SELECT COUNT(*) FROM " . DB_TABLE_PREFIX . "reviews WHERE store = s.id AND valid > 0) as votes, (SELECT AVG(stars) FROM " . DB_TABLE_PREFIX . "reviews WHERE store = s.id AND valid > 0) as rating, s.image, s.id, s.name, s.link, s.category FROM " . DB_TABLE_PREFIX . "products p LEFT JOIN " . DB_TABLE_PREFIX . "stores s ON (s.id = p.store) WHERE p.category IN(" . implode( ',', $ids ) . ") AND p.visible > 0 AND s.visible > 0" . ( empty( $where ) ? '' : implode( ' AND ', array_filter( $where ) ) ) . ( empty( $orderby ) ? '' : ' ORDER BY ' . implode( ', ', array_filter( $orderby ) ) ) . ( empty( $limit ) ? '' : ' LIMIT ' . implode( ',', $limit ) ) );
   $stmt->execute();
@@ -2162,7 +2213,7 @@ global $db, $GET;
 
   $data = array();
   while( $stmt->fetch() ) {
-    $data[] = (object) array( 'ID' => $id, 'feedID' => $feed_id, 'userID' => $user, 'storeID' => $store, 'catID' => $cat, 'title' => htmlspecialchars( $title ), 'url' => ( filter_var( $link, FILTER_VALIDATE_URL ) ? htmlspecialchars( $link ) : htmlspecialchars( $store_link ) ), 'description' => htmlspecialchars( $description ), 'tags' => htmlspecialchars( $tags ), 'image' => htmlspecialchars( $image ), 'price' => $price, 'old_price' => ( $old_price > 0 && $old_price > $price ? $old_price : 0 ), 'currency' => htmlspecialchars( $currency ), 'visible' => $visible, 'views' => $views, 'start_date' => $start, 'is_running' => ( strtotime( $start ) < time() && strtotime( $expiration ) > time() ? true : false ), 'expiration_date' => $expiration, 'cashback' => $cashback, 'is_started' => ( strtotime( $start ) > time() ? false : true ), 'is_expired' => ( strtotime( $expiration ) > time() ? false : true ), 'paid_until' => $paid_until, 'date' => $date, 'reviews' => $reviews, 'stars' => $stars, 'store_img' => htmlspecialchars( $store_img ), 'storeID' => $store_id, 'store_catID' => $store_cat, 'store_name' => htmlspecialchars( $store_name ), 'store_url' => htmlspecialchars( $store_link ), 'link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_product, $title, $id ) : $GLOBALS['siteURL'] . '?product=' . $id ), 'store_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_store, $store_name, $store_id ) : $GLOBALS['siteURL'] . '?store=' . $store_id ), 'store_reviews_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_reviews, $store_name, $store_id ) : $GLOBALS['siteURL'] . '?reviews=' . $store_id ) );
+    $data[] = (object) array( 'ID' => $id, 'feedID' => $feed_id, 'userID' => $user, 'storeID' => $store, 'catID' => $cat, 'title' => htmlspecialchars( $title ), 'url' => ( filter_var( $link, FILTER_VALIDATE_URL ) ? htmlspecialchars( $link ) : htmlspecialchars( $store_link ) ), 'description' => $description, 'tags' => htmlspecialchars( $tags ), 'image' => htmlspecialchars( $image ), 'price' => $price, 'old_price' => ( $old_price > 0 && $old_price > $price ? $old_price : 0 ), 'currency' => htmlspecialchars( $currency ), 'visible' => $visible, 'views' => $views, 'start_date' => $start, 'is_running' => ( strtotime( $start ) < time() && strtotime( $expiration ) > time() ? true : false ), 'expiration_date' => $expiration, 'cashback' => $cashback, 'is_started' => ( strtotime( $start ) > time() ? false : true ), 'is_expired' => ( strtotime( $expiration ) > time() ? false : true ), 'paid_until' => $paid_until, 'date' => $date, 'reviews' => $reviews, 'stars' => $stars, 'store_img' => htmlspecialchars( $store_img ), 'storeID' => $store_id, 'store_catID' => $store_cat, 'store_name' => htmlspecialchars( $store_name ), 'store_url' => htmlspecialchars( $store_link ), 'link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_product, $title, $id ) : $GLOBALS['siteURL'] . '?product=' . $id ), 'store_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_store, $store_name, $store_id ) : $GLOBALS['siteURL'] . '?store=' . $store_id ), 'store_reviews_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_reviews, $store_name, $store_id ) : $GLOBALS['siteURL'] . '?reviews=' . $store_id ) );
   }
 
   $stmt->close();
@@ -2189,7 +2240,7 @@ global $db, $GET;
 
   $data = array();
   while( $stmt->fetch() ) {
-    $data[] = (object) array( 'ID' => $id, 'feedID' => $feed_id, 'userID' => $user, 'storeID' => $store, 'catID' => $cat, 'title' => htmlspecialchars( $title ), 'url' => ( filter_var( $link, FILTER_VALIDATE_URL ) ? htmlspecialchars( $link ) : htmlspecialchars( $store_link ) ), 'description' => htmlspecialchars( $description ), 'tags' => htmlspecialchars( $tags ), 'image' => htmlspecialchars( $image ), 'price' => $price, 'old_price' => ( $old_price > 0 && $old_price > $price ? $old_price : 0 ), 'currency' => htmlspecialchars( $currency ), 'visible' => $visible, 'views' => $views, 'start_date' => $start, 'is_running' => ( strtotime( $start ) < time() && strtotime( $expiration ) > time() ? true : false ), 'expiration_date' => $expiration, 'cashback' => $cashback, 'is_started' => ( strtotime( $start ) > time() ? false : true ), 'is_expired' => ( strtotime( $expiration ) > time() ? false : true ), 'paid_until' => $paid_until, 'date' => $date, 'reviews' => $reviews, 'stars' => $stars, 'store_img' => htmlspecialchars( $store_img ), 'storeID' => $store_id, 'store_catID' => $store_cat, 'store_name' => htmlspecialchars( $store_name ), 'store_url' => htmlspecialchars( $store_link ), 'link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_product, $title, $id ) : $GLOBALS['siteURL'] . '?product=' . $id ), 'store_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_store, $store_name, $store_id ) : $GLOBALS['siteURL'] . '?store=' . $store_id ), 'store_reviews_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_reviews, $store_name, $store_id ) : $GLOBALS['siteURL'] . '?reviews=' . $store_id ) );
+    $data[] = (object) array( 'ID' => $id, 'feedID' => $feed_id, 'userID' => $user, 'storeID' => $store, 'catID' => $cat, 'title' => htmlspecialchars( $title ), 'url' => ( filter_var( $link, FILTER_VALIDATE_URL ) ? htmlspecialchars( $link ) : htmlspecialchars( $store_link ) ), 'description' => $description, 'tags' => htmlspecialchars( $tags ), 'image' => htmlspecialchars( $image ), 'price' => $price, 'old_price' => ( $old_price > 0 && $old_price > $price ? $old_price : 0 ), 'currency' => htmlspecialchars( $currency ), 'visible' => $visible, 'views' => $views, 'start_date' => $start, 'is_running' => ( strtotime( $start ) < time() && strtotime( $expiration ) > time() ? true : false ), 'expiration_date' => $expiration, 'cashback' => $cashback, 'is_started' => ( strtotime( $start ) > time() ? false : true ), 'is_expired' => ( strtotime( $expiration ) > time() ? false : true ), 'paid_until' => $paid_until, 'date' => $date, 'reviews' => $reviews, 'stars' => $stars, 'store_img' => htmlspecialchars( $store_img ), 'storeID' => $store_id, 'store_catID' => $store_cat, 'store_name' => htmlspecialchars( $store_name ), 'store_url' => htmlspecialchars( $store_link ), 'link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_product, $title, $id ) : $GLOBALS['siteURL'] . '?product=' . $id ), 'store_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_store, $store_name, $store_id ) : $GLOBALS['siteURL'] . '?store=' . $store_id ), 'store_reviews_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_reviews, $store_name, $store_id ) : $GLOBALS['siteURL'] . '?reviews=' . $store_id ) );
   }
 
   $stmt->close();
@@ -2272,7 +2323,7 @@ global $db, $GET;
 
   $data = array();
   while( $stmt->fetch() ) {
-    $data[] = (object) array( 'ID' => $id, 'feedID' => $feed_id, 'userID' => $user, 'storeID' => $store, 'catID' => $cat, 'title' => htmlspecialchars( $title ), 'url' => ( filter_var( $link, FILTER_VALIDATE_URL ) ? htmlspecialchars( $link ) : htmlspecialchars( $store_link ) ), 'description' => htmlspecialchars( $description ), 'tags' => htmlspecialchars( $tags ), 'image' => htmlspecialchars( $image ), 'price' => $price, 'old_price' => ( $old_price > 0 && $old_price > $price ? $old_price : 0 ), 'currency' => htmlspecialchars( $currency ), 'visible' => $visible, 'views' => $views, 'start_date' => $start, 'is_running' => ( strtotime( $start ) < time() && strtotime( $expiration ) > time() ? true : false ), 'expiration_date' => $expiration, 'cashback' => $cashback, 'is_started' => ( strtotime( $start ) > time() ? false : true ), 'is_expired' => ( strtotime( $expiration ) > time() ? false : true ), 'paid_until' => $paid_until, 'date' => $date, 'reviews' => $reviews, 'stars' => $stars, 'store_img' => htmlspecialchars( $store_img ), 'storeID' => $store_id, 'store_catID' => $store_cat, 'store_name' => htmlspecialchars( $store_name ), 'store_url' => htmlspecialchars( $store_link ), 'link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_product, $title, $id ) : $GLOBALS['siteURL'] . '?product=' . $id ), 'store_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_store, $store_name, $store_id ) : $GLOBALS['siteURL'] . '?store=' . $store_id ), 'store_reviews_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_reviews, $store_name, $store_id ) : $GLOBALS['siteURL'] . '?reviews=' . $store_id ) );
+    $data[] = (object) array( 'ID' => $id, 'feedID' => $feed_id, 'userID' => $user, 'storeID' => $store, 'catID' => $cat, 'title' => htmlspecialchars( $title ), 'url' => ( filter_var( $link, FILTER_VALIDATE_URL ) ? htmlspecialchars( $link ) : htmlspecialchars( $store_link ) ), 'description' => $description, 'tags' => htmlspecialchars( $tags ), 'image' => htmlspecialchars( $image ), 'price' => $price, 'old_price' => ( $old_price > 0 && $old_price > $price ? $old_price : 0 ), 'currency' => htmlspecialchars( $currency ), 'visible' => $visible, 'views' => $views, 'start_date' => $start, 'is_running' => ( strtotime( $start ) < time() && strtotime( $expiration ) > time() ? true : false ), 'expiration_date' => $expiration, 'cashback' => $cashback, 'is_started' => ( strtotime( $start ) > time() ? false : true ), 'is_expired' => ( strtotime( $expiration ) > time() ? false : true ), 'paid_until' => $paid_until, 'date' => $date, 'reviews' => $reviews, 'stars' => $stars, 'store_img' => htmlspecialchars( $store_img ), 'storeID' => $store_id, 'store_catID' => $store_cat, 'store_name' => htmlspecialchars( $store_name ), 'store_url' => htmlspecialchars( $store_link ), 'link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_product, $title, $id ) : $GLOBALS['siteURL'] . '?product=' . $id ), 'store_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_store, $store_name, $store_id ) : $GLOBALS['siteURL'] . '?store=' . $store_id ), 'store_reviews_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_reviews, $store_name, $store_id ) : $GLOBALS['siteURL'] . '?reviews=' . $store_id ) );
   }
 
   $stmt->close();
@@ -2776,7 +2827,7 @@ global $db;
 
   $data = array();
   while( $stmt->fetch() ) {
-    $data[] = (object)array( 'ID' => $id, 'feedID' => $feed_id, 'userID' => $user, 'catID' => $cat, 'name' => htmlspecialchars( $name ), 'url' => htmlspecialchars( $link ), 'description' => htmlspecialchars( $description ), 'tags' => htmlspecialchars( $tags ), 'image' => htmlspecialchars( $image ), 'date' => $date, 'visible' => $visible, 'views' => $views, 'reviews' => $reviews, 'stars' => $stars, 'coupons' => $coupons, 'products' => $products, 'is_popular' => (boolean) $popular, 'link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_store, $name, $id ) : $GLOBALS['siteURL'] . '?store=' . $id ), 'reviews_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_reviews, $name, $id ) : $GLOBALS['siteURL'] . '?reviews=' . $id ) );
+    $data[] = (object)array( 'ID' => $id, 'feedID' => $feed_id, 'userID' => $user, 'catID' => $cat, 'name' => htmlspecialchars( $name ), 'url' => htmlspecialchars( $link ), 'description' => $description, 'tags' => htmlspecialchars( $tags ), 'image' => htmlspecialchars( $image ), 'date' => $date, 'visible' => $visible, 'views' => $views, 'reviews' => $reviews, 'stars' => $stars, 'coupons' => $coupons, 'products' => $products, 'is_popular' => (boolean) $popular, 'link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_store, $name, $id ) : $GLOBALS['siteURL'] . '?store=' . $id ), 'reviews_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_reviews, $name, $id ) : $GLOBALS['siteURL'] . '?reviews=' . $id ) );
   }
 
   $stmt->close();
@@ -2907,7 +2958,7 @@ global $db;
 
   $data = array();
   while( $stmt->fetch() ) {
-    $data[] = (object)array( 'ID' => $id, 'feedID' => $feed_id, 'user' => $user, 'category' => $cat, 'name' => htmlspecialchars( $name ), 'url' => htmlspecialchars( $link ), 'description' => htmlspecialchars( $description ), 'tags' => htmlspecialchars( $tags ), 'image' => htmlspecialchars( $image ), 'date' => $date, 'catID' => $category, 'views' => $views, 'reviews' => $reviews, 'stars' => $stars, 'coupons' => $coupons, 'is_popular' => (boolean) $popular, 'link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_store, $name, $id ) : $GLOBALS['siteURL'] . '?store=' . $id ), 'reviews_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_reviews, $name, $id ) : $GLOBALS['siteURL'] . '?reviews=' . $id ) );
+    $data[] = (object)array( 'ID' => $id, 'feedID' => $feed_id, 'user' => $user, 'category' => $cat, 'name' => htmlspecialchars( $name ), 'url' => htmlspecialchars( $link ), 'description' => $description, 'tags' => htmlspecialchars( $tags ), 'image' => htmlspecialchars( $image ), 'date' => $date, 'catID' => $category, 'views' => $views, 'reviews' => $reviews, 'stars' => $stars, 'coupons' => $coupons, 'is_popular' => (boolean) $popular, 'link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_store, $name, $id ) : $GLOBALS['siteURL'] . '?store=' . $id ), 'reviews_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_reviews, $name, $id ) : $GLOBALS['siteURL'] . '?reviews=' . $id ) );
   }
 
   $stmt->close();
@@ -3053,7 +3104,7 @@ global $db;
 
   $data = array();
   while( $stmt->fetch() ) {
-    $data[] = (object)array( 'ID' => $id, 'feedID' => $feed_id, 'user' => $user, 'code' => htmlspecialchars( $code ), 'title' => htmlspecialchars( $title ), 'url' => ( filter_var( $link, FILTER_VALIDATE_URL ) ? htmlspecialchars( $link ) : htmlspecialchars( $store_link ) ), 'description' => htmlspecialchars( $description ), 'tags' => htmlspecialchars( $tags ), 'catID' => $cat, 'views' => $views, 'start_date' => $start, 'is_coupon' => ( !empty( $code ) ? true: false ), 'is_deal' => ( empty( $code ) ? true: false ), 'is_running' => ( strtotime( $start ) > time() && strtotime( $expiration ) > time() ? true : false ), 'expiration_date' => $expiration, 'cashback' => $cashback, 'is_started' => ( strtotime( $start ) > time() ? false : true ), 'is_expired' => ( strtotime( $expiration ) > time() ? false : true ), 'date' => $date, 'reviews' => $reviews, 'stars' => $stars, 'store_img' => htmlspecialchars( $store_img ), 'storeID' => $store_id, 'store_name' => htmlspecialchars( $store_name ), 'store_url' => htmlspecialchars( $store_link ), 'link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_coupon, $title, $id ) : $GLOBALS['siteURL'] . '?id=' . $id ), 'store_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_store, $store_name, $store_id ) : $GLOBALS['siteURL'] . '?store=' . $store_id ), 'store_reviews_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_reviews, $store_name, $store_id ) : $GLOBALS['siteURL'] . '?reviews=' . $store_id ) );
+    $data[] = (object)array( 'ID' => $id, 'feedID' => $feed_id, 'user' => $user, 'code' => htmlspecialchars( $code ), 'title' => htmlspecialchars( $title ), 'url' => ( filter_var( $link, FILTER_VALIDATE_URL ) ? htmlspecialchars( $link ) : htmlspecialchars( $store_link ) ), 'description' => $description, 'tags' => htmlspecialchars( $tags ), 'catID' => $cat, 'views' => $views, 'start_date' => $start, 'is_coupon' => ( !empty( $code ) ? true: false ), 'is_deal' => ( empty( $code ) ? true: false ), 'is_running' => ( strtotime( $start ) > time() && strtotime( $expiration ) > time() ? true : false ), 'expiration_date' => $expiration, 'cashback' => $cashback, 'is_started' => ( strtotime( $start ) > time() ? false : true ), 'is_expired' => ( strtotime( $expiration ) > time() ? false : true ), 'date' => $date, 'reviews' => $reviews, 'stars' => $stars, 'store_img' => htmlspecialchars( $store_img ), 'storeID' => $store_id, 'store_name' => htmlspecialchars( $store_name ), 'store_url' => htmlspecialchars( $store_link ), 'link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_coupon, $title, $id ) : $GLOBALS['siteURL'] . '?id=' . $id ), 'store_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_store, $store_name, $store_id ) : $GLOBALS['siteURL'] . '?store=' . $store_id ), 'store_reviews_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_reviews, $store_name, $store_id ) : $GLOBALS['siteURL'] . '?reviews=' . $store_id ) );
   }
 
   $stmt->close();
@@ -3199,7 +3250,7 @@ global $db;
 
   $data = array();
   while( $stmt->fetch() ) {
-    $data[] = (object) array( 'ID' => $id, 'feedID' => $feed_id, 'userID' => $user, 'storeID' => $store, 'catID' => $cat, 'title' => htmlspecialchars( $title ), 'url' => ( filter_var( $link, FILTER_VALIDATE_URL ) ? htmlspecialchars( $link ) : htmlspecialchars( $store_link ) ), 'description' => htmlspecialchars( $description ), 'tags' => htmlspecialchars( $tags ), 'image' => htmlspecialchars( $image ), 'price' => $price, 'old_price' => ( $old_price > 0 && $old_price > $price ? $old_price : 0 ), 'currency' => htmlspecialchars( $currency ), 'visible' => $visible, 'views' => $views, 'start_date' => $start, 'is_running' => ( strtotime( $start ) < time() && strtotime( $expiration ) > time() ? true : false ), 'expiration_date' => $expiration, 'cashback' => $cashback, 'is_started' => ( strtotime( $start ) > time() ? false : true ), 'is_expired' => ( strtotime( $expiration ) > time() ? false : true ), 'paid_until' => $paid_until, 'date' => $date, 'reviews' => $reviews, 'stars' => $stars, 'store_img' => htmlspecialchars( $store_img ), 'storeID' => $store_id, 'store_catID' => $store_cat, 'store_name' => htmlspecialchars( $store_name ), 'store_url' => htmlspecialchars( $store_link ), 'link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_product, $title, $id ) : $GLOBALS['siteURL'] . '?product=' . $id ), 'store_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_store, $store_name, $store_id ) : $GLOBALS['siteURL'] . '?store=' . $store_id ), 'store_reviews_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_reviews, $store_name, $store_id ) : $GLOBALS['siteURL'] . '?reviews=' . $store_id ) );
+    $data[] = (object) array( 'ID' => $id, 'feedID' => $feed_id, 'userID' => $user, 'storeID' => $store, 'catID' => $cat, 'title' => htmlspecialchars( $title ), 'url' => ( filter_var( $link, FILTER_VALIDATE_URL ) ? htmlspecialchars( $link ) : htmlspecialchars( $store_link ) ), 'description' => $description, 'tags' => htmlspecialchars( $tags ), 'image' => htmlspecialchars( $image ), 'price' => $price, 'old_price' => ( $old_price > 0 && $old_price > $price ? $old_price : 0 ), 'currency' => htmlspecialchars( $currency ), 'visible' => $visible, 'views' => $views, 'start_date' => $start, 'is_running' => ( strtotime( $start ) < time() && strtotime( $expiration ) > time() ? true : false ), 'expiration_date' => $expiration, 'cashback' => $cashback, 'is_started' => ( strtotime( $start ) > time() ? false : true ), 'is_expired' => ( strtotime( $expiration ) > time() ? false : true ), 'paid_until' => $paid_until, 'date' => $date, 'reviews' => $reviews, 'stars' => $stars, 'store_img' => htmlspecialchars( $store_img ), 'storeID' => $store_id, 'store_catID' => $store_cat, 'store_name' => htmlspecialchars( $store_name ), 'store_url' => htmlspecialchars( $store_link ), 'link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_product, $title, $id ) : $GLOBALS['siteURL'] . '?product=' . $id ), 'store_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_store, $store_name, $store_id ) : $GLOBALS['siteURL'] . '?store=' . $store_id ), 'store_reviews_link' => ( $seo_link ? \site\utils::make_seo_link( $seo_link_reviews, $store_name, $store_id ) : $GLOBALS['siteURL'] . '?reviews=' . $store_id ) );
   }
 
   $stmt->close();
